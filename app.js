@@ -5,6 +5,12 @@
 const TG = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
 const VER = "1.7";
 const $ = id => document.getElementById(id);
+/* Қауіпсіз байлау: элемент табылмаса (мысалы index.html ескі болса) —
+   бүкіл скрипт құламайды, тек сол батырма істемейді. */
+const NOEL = { click() {}, focus() {}, style: {}, dataset: {},
+  classList: { add() {}, remove() {}, toggle() {}, contains() { return false } },
+  querySelectorAll() { return [] }, addEventListener() {}, insertAdjacentHTML() {} };
+const B = id => document.getElementById(id) || (logErr("dom", "элемент жоқ: #" + id), NOEL);
 const fmt = n => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 
 /* ---------- Қате журналы (диагностика) ---------- */
@@ -191,7 +197,7 @@ function save() {
   stale.forEach(i => TG.CloudStorage.removeItem("d" + i, done));
 }
 function lsSave() { try { localStorage.setItem("kurt", JSON.stringify(S)); localStorage.setItem("kurt_t", String(Date.now())); } catch (e) { logErr("localStorage", e); } }
-function setSync(t) { const e = $("syncst"); if (e) e.textContent = t; }
+function setSync(t) { const e = document.getElementById("syncst"); if (e) e.textContent = t; }
 
 /* жүктелген/импортталған күйді тексеру — бүлінген сандар қосымшаны бұзбасын */
 function sanitize() {
@@ -393,15 +399,16 @@ const nextPt = () => ROUTE[0] || null;
 
 /* ---------- Хабарлама ---------- */
 let tt = null;
-function toast(t) { $("toast").textContent = t; $("toast").classList.add("on");
-  clearTimeout(tt); tt = setTimeout(() => $("toast").classList.remove("on"), 2800); }
+function toast(t) { const e = document.getElementById("toast"); if (!e) return;
+  e.textContent = t; e.classList.add("on");
+  clearTimeout(tt); tt = setTimeout(() => e.classList.remove("on"), 2800); }
 
 /* ---------- Парақ (sheet) ---------- */
 function showSheet() { $("sheet").classList.add("on"); $("mask").classList.add("on");
   if (TG && TG.BackButton) { TG.BackButton.show(); } }
 function closeSheet() { restoreSnap(); $("sheet").classList.remove("on"); $("mask").classList.remove("on");
   clearInterval(vtick); if (TG && TG.BackButton) TG.BackButton.hide(); }
-$("mask").onclick = closeSheet;
+B("mask").onclick = closeSheet;
 if (TG && TG.BackButton) TG.BackButton.onClick(() => {
   if ($("sheet").classList.contains("on")) closeSheet();
   else if (FOLLOW) MAP.follow(false);
@@ -468,7 +475,7 @@ function renderZone() {
 const esc = s => String(s == null ? "" : s).replace(/[<>&"']/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#39;" }[c]));
 
 /* ================= Күнді бастау / аяқтау ================= */
-$("daybtn").onclick = () => {
+B("daybtn").onclick = () => {
   const t = T();
   if (!t.started) {
     if (!gpsOk) return askGps();     // маршрут бұрын құрылған болса да — орныңыз белгісіз
@@ -521,7 +528,7 @@ function finishDay() {
 
 /* ================= Точкаға келу ================= */
 let atKey = null, arrivedAt = null, vtick = null;
-$("barr").onclick = () => { const n = nextPt(); if (!n) { toast("Барлық точка өтті"); return; }
+B("barr").onclick = () => { const n = nextPt(); if (!n) { toast("Барлық точка өтті"); return; }
   atKey = n.k; arrivedAt = astana(); haptic("medium"); openVisit(); };
 
 function openVisit() {
@@ -778,8 +785,8 @@ function renderPts() {
   L.querySelectorAll(".swipe-del").forEach(e => e.onclick = ev => { ev.stopPropagation(); delPt(e.dataset.d); });
   $("ptsmore").textContent = total > listLimit ? `${listLimit} / ${total} көрсетілді — іздеуді қолданыңыз` : "";
 }
-$("q").oninput = () => { listLimit = 60; renderPts(); };
-$("badd").onclick = () => {
+B("q").oninput = () => { listLimit = 60; renderPts(); };
+B("badd").onclick = () => {
   $("sbody").innerHTML = `<div class="sh">Жаңа точка</div><div class="sa">Дүкен қосу</div><div style="height:16px"></div>
    <div class="f"><label>Дүкен аты</label><input id="a_n" placeholder="Мысалы: Береке"></div>
    <div class="f"><label>Мекенжай</label><input id="a_a" placeholder="Көше, үй"></div>
@@ -824,7 +831,7 @@ function openCat(id) {
   };
   if ($("c_del")) $("c_del").onclick = () => { S.cat = S.cat.filter(x => x.id !== id); saveSoon(); closeSheet(); renderCat(); toast("Өшірілді"); };
 }
-$("bcat").onclick = () => openCat(0);
+B("bcat").onclick = () => openCat(0);
 function bindPlan() {
   const cl = (v, d) => { v = Math.floor(+v); return (!isFinite(v) || v < 1) ? d : Math.min(v, 100000); };
   const on = () => { S.plan = { pts: cl($("s_pts").value, 40), kg: cl($("s_kg").value, 30),
@@ -844,7 +851,7 @@ function renderSetInfo() {
     : `Базада ${n} дүкен, күніне ${per} → бір айналым ≈${real} күн. ${S.cycle} күндік цикл орындалады.`;
   const t = $("trashinfo"); if (t) t.textContent = S.del.length ? S.del.length + " дүкен өшірілген — қайтаруға болады" : "Өшірілген дүкен жоқ";
 }
-$("bremake").onclick = () => {
+B("bremake").onclick = () => {
   const t = T();
   if (visitedKeys().length) {
     $("sbody").innerHTML = `<div class="sh">Маршрутты қайта құру</div>
@@ -860,7 +867,7 @@ $("bremake").onclick = () => {
       saveSoon(); closeSheet(); renderDay(); MAP.refresh(); toast("Маршрут жаңартылды"); };
   } else { makeRoute(true); renderDay(); MAP.refresh(); haptic("ok"); toast("Жаңа аймақ таңдалды"); }
 };
-$("breset").onclick = () => {
+B("breset").onclick = () => {
   $("sbody").innerHTML = `<div class="sh">Тазалау</div><div class="sa">Не өшіру керек?</div>
    <div style="height:16px"></div>
    <button class="btn gh big" id="rz1">Бүгінгі күнді ғана</button>
@@ -881,10 +888,10 @@ $("breset").onclick = () => {
     haptic("ok"); toast("Сынақ деректері өшірілді — ертең таза бастайсыз");
   };
 };
-$("bsync").onclick = () => { save(); toast("Сақталуда…"); };
+B("bsync").onclick = () => { save(); toast("Сақталуда…"); };
 
 /* ---------- Сақтық көшірме ---------- */
-$("bexp").onclick = () => {
+B("bexp").onclick = () => {
   const sold = Object.values(S.hist).reduce((a, h) => a + Object.keys(h.v || {}).length, 0);
   $("sbody").innerHTML = `<div class="sh">Сақтық көшірме</div><div class="sa">${Object.keys(S.hist).length} күн · ${sold} жазба</div>
    <div style="height:14px"></div>
@@ -915,10 +922,10 @@ $("bexp").onclick = () => {
     haptic("ok"); toast("✓ Қалпына келтірілді");
   };
 };
-$("btrash").onclick = openTrash;
+B("btrash").onclick = openTrash;
 
 /* ---------- Диагностика ---------- */
-$("bdiag").onclick = () => {
+B("bdiag").onclick = () => {
   const raw = JSON.stringify(S), kb = (raw.length / 1024).toFixed(1);
   const chunks = Math.ceil(raw.length / CHUNK);
   const days = Object.keys(S.hist).length;
@@ -1169,7 +1176,7 @@ function paintNav() {
     $("ndist").textContent = fmt(d); $("ntime").textContent = Math.max(1, Math.round(d / 420));
     $("mvi").textContent = "⚠︎"; $("mvt").innerHTML = `Түзу бағыт (нақты жол емес)<small>${esc(roadErr || "жол деректері жоқ")}</small>`; }
 }
-$("mnv").onclick = () => {
+B("mnv").onclick = () => {
   const n = nextPt(); if (!n) return;
   const rows = STEPS.length ? STEPS.map((s, i) => { const m = mnvText(s);
     return `<div class="item"><div class="dot" style="background:${i === 0 ? "#1f6feb" : "#eef0f4"};color:${i === 0 ? "#fff" : "#39414f"}">${m.ic}</div>
@@ -1181,7 +1188,7 @@ $("mnv").onclick = () => {
     <div style="height:14px"></div><button class="btn pri" onclick="closeSheet()">Жабу</button>`;
   showSheet();
 };
-$("bskip").onclick = () => { const n = nextPt(); if (!n) return;
+B("bskip").onclick = () => { const n = nextPt(); if (!n) return;
   const t = T(); t.route = t.route.filter(k => k !== n.k);
   const inR = new Set(t.route); inR.add(n.k);   // өткізілген дүкен өзін-өзі алмастырмасын
   let pl = allPoints().filter(p => !inR.has(p.k) && daysAgo(p.k) >= S.cycle);
@@ -1261,11 +1268,11 @@ const MAP = {
     if (this.meMk) this.meMk.setLatLng([ME.lat, ME.lon]);
   }
 };
-$("mz1").onclick = () => MAP.ok && MAP.map.setZoom(MAP.map.getZoom() + 1);
-$("mz2").onclick = () => MAP.ok && MAP.map.setZoom(MAP.map.getZoom() - 1);
-$("mc").onclick = () => MAP.center();
-$("mfollow").onclick = () => MAP.follow();
-$("nvExit").onclick = () => MAP.follow(false);
+B("mz1").onclick = () => MAP.ok && MAP.map.setZoom(MAP.map.getZoom() + 1);
+B("mz2").onclick = () => MAP.ok && MAP.map.setZoom(MAP.map.getZoom() - 1);
+B("mc").onclick = () => MAP.center();
+B("mfollow").onclick = () => MAP.follow();
+B("nvExit").onclick = () => MAP.follow(false);
 function openExternal(p) {
   if (!p) return;
   const la = p.lat, lo = p.lon;
@@ -1291,9 +1298,9 @@ function openExternal(p) {
     catch (e) { window.open(u, "_blank"); }
   });
 }
-$("nvOpen").onclick = () => openExternal(nextPt());
-$("nvArrive").onclick = () => { MAP.follow(false); $("barr").click(); };
-$("mloc").onclick = () => locateMe();
+B("nvOpen").onclick = () => openExternal(nextPt());
+B("nvArrive").onclick = () => { MAP.follow(false); B("barr").click(); };
+B("mloc").onclick = () => locateMe();
 
 /* ================= GPS ================= */
 let watchId = null, lastRefresh = 0, gpsWanted = false;
@@ -1371,7 +1378,7 @@ document.querySelectorAll(".tab").forEach(t => t.onclick = () => go(t.dataset.p)
 
 /* ================= Іске қосу ================= */
 let booted = false;
-function hideSplash() { const s = $("splash"); if (s) s.classList.add("hide"); }
+function hideSplash() { const s = document.getElementById("splash"); if (s) s.classList.add("hide"); }
 // Бұлт жауап бермей қалса, жүктелу экраны мәңгі тұрып қалмас үшін — қатаң шек
 const bootTimer = setTimeout(() => {
   if (booted) return;
@@ -1389,12 +1396,12 @@ function boot() {
     const moved = migrateKeys();
     pruneHist();
     DAYKEY = dkey();
-    $("s_pts").value = S.plan.pts; $("s_kg").value = S.plan.kg; $("s_tg").value = S.plan.tg;
-    $("s_cyc").value = S.cycle;
+    B("s_pts").value = S.plan.pts; B("s_kg").value = S.plan.kg; B("s_tg").value = S.plan.tg;
+    B("s_cyc").value = S.cycle;
     bindPlan();
     const u = TG && TG.initDataUnsafe && TG.initDataUnsafe.user;
-    $("uname").textContent = u ? (u.first_name || "") + (u.username ? " · @" + u.username : "") : "Браузер режимі";
-    $("verline").textContent = "Нұсқа " + VER + " · " + KURT_POINTS.length + " дүкен базада";
+    B("uname").textContent = u ? (u.first_name || "") + (u.username ? " · @" + u.username : "") : "Браузер режимі";
+    B("verline").textContent = "Нұсқа " + VER + " · " + KURT_POINTS.length + " дүкен базада";
     if (!cloudOn()) setSync("телефон жадында");
     MAP.init(); renderDay(); renderCat(); renderCal(); renderPts(); renderSetInfo(); renderDanger();
     startGPS();
