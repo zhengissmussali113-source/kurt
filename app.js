@@ -3,7 +3,7 @@
    Карта: OpenStreetMap + OSRM (тегін)
 ================================================================= */
 const TG = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-const VER = "1.0";
+const VER = "1.3";
 const $ = id => document.getElementById(id);
 const fmt = n => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 
@@ -40,6 +40,8 @@ const DEF = {
   addSeq: 1,
   px: {},         // {pointKey: {catId: баға}}  — есте сақталған баға
   off: {},        // {'2026-08-03': true}  — демалыс күндері
+  lastv: {},      // {pointKey: 'YYYY-MM-DD'} — соңғы рет қашан барылды
+  cycle: 14,      // әр дүкенге қанша күнде бір рет кіру
   hist: {},       // {'2026-08-03': {route:[key], v:{key:{st,kg,sum,cat,price,time}} , started:bool}}
 };
 let S = JSON.parse(JSON.stringify(DEF));
@@ -117,20 +119,44 @@ const waitKeys = () => T().route.filter(k => !T().v[k]);
 function soldList() { const t = T(); return t.route.filter(k => t.v[k] && t.v[k].st === "sold").map(k => t.v[k]); }
 const sumKg = () => soldList().reduce((a, x) => a + x.kg, 0);
 const sumTg = () => soldList().reduce((a, x) => a + x.sum, 0);
-function planDone() { const t = T();
-  return visitedKeys().length >= S.plan.pts || sumKg() >= S.plan.kg || sumTg() >= S.plan.tg; }
+// пайда = (сатқан баға − алған баға) × кг
+function sumProfit() { return soldList().reduce((a, x) => {
+  const c = S.cat.find(y => y.id === x.cat); return a + (c ? x.kg * (x.price - c.buy) : 0); }, 0); }
+function planDone() {
+  return visitedKeys().length >= S.plan.pts || sumKg() >= S.plan.kg || sumProfit() >= S.plan.tg; }
 
 /* ---------- Маршрут құру ---------- */
 let ME = { lat: 42.3175, lon: 69.6100 }, gpsOk = false;
+let HEAD = 0, PREV = null, FOLLOW = false, spd = 0;
 let ROUTE = [], ROUTEKM = 0;
 
-function makeRoute() {
+// күндер айырмасы
+function daysAgo(k) {
+  const d = S.lastv[k]; if (!d) return 9999;
+  return Math.round((astana() - new Date(d + "T00:00:00")) / 86400000);
+}
+/* Бүгінгі 40 точка: базаны біртіндеп аралау үшін
+   1) ең ұзақ уақыт барылмаған дүкенді «тірек» етіп аламыз
+   2) соның айналасынан ең жақын 39 дүкенді қосамыз (циклы жеткендерді)
+   Нәтиже: маршрут ықшам аймақта, әрі база кезекпен толық аралады. */
+function makeRoute(force) {
   const t = T();
-  if (!t.route.length) {                       // бүгінге әлі құрылмаған
-    const pts = allPoints().sort((a, b) => dist(ME, a) - dist(ME, b)).slice(0, S.plan.pts);
-    t.route = pts.map(p => p.k); saveSoon();
-  }
-  buildOrder();
+  if (t.route.length && !force) { buildOrder(); return; }
+  const all = allPoints();
+  if (!all.length) { t.route = []; buildOrder(); return; }
+  // циклы жеткендер (әдепкі 14 күн)
+  let cand = all.filter(p => daysAgo(p.k) >= S.cycle);
+  if (cand.length < S.plan.pts) cand = all.slice();   // жетпесе — бәрі
+  // тірек: ең ұзақ барылмаған
+  // ең ұзақ барылмағаны; бірдей болса — тұрған жеріңізге жақыны
+  cand.sort((a, b) => (daysAgo(b.k) - daysAgo(a.k)) || (dist(ME, a) - dist(ME, b)));
+  const seed = cand[0];
+  // тірек айналасынан ең жақындарын алу
+  const near = cand.slice().sort((a, b) => dist(seed, a) - dist(seed, b)).slice(0, S.plan.pts);
+  t.route = near.map(p => p.k);
+  t.zone = seed.a || seed.n;
+  t.made = dkey();
+  saveSoon(); buildOrder();
 }
 function buildOrder() {
   reindex();
@@ -159,22 +185,27 @@ function showSheet() { $("sheet").classList.add("on"); $("mask").classList.add("
 function closeSheet() { restoreSnap(); $("sheet").classList.remove("on"); $("mask").classList.remove("on");
   clearInterval(vtick); if (TG && TG.BackButton) TG.BackButton.hide(); }
 $("mask").onclick = closeSheet;
-if (TG && TG.BackButton) TG.BackButton.onClick(closeSheet);
+if (TG && TG.BackButton) TG.BackButton.onClick(() => {
+  if ($("sheet").classList.contains("on")) closeSheet();
+  else if (FOLLOW) MAP.follow(false);
+});
 
 /* ================= КҮН экраны ================= */
 function renderDay() {
   buildOrder();
-  const t = T(), vs = visitedKeys(), kg = sumKg(), tg = sumTg();
+  const t = T(), vs = visitedKeys(), kg = sumKg(), pr = sumProfit();
   $("pdone").textContent = vs.length; $("pplan").textContent = S.plan.pts;
-  $("pkg").textContent = S.plan.kg; $("ptg").textContent = Math.round(S.plan.tg / 1000);
+  $("pkg").textContent = S.plan.kg; $("ptg").textContent = S.plan.tg >= 10000 ? Math.round(S.plan.tg / 1000) : (S.plan.tg / 1000).toFixed(1);
   const pc = Math.max(0, Math.min(1, vs.length / Math.max(1, S.plan.pts)));
   $("rg").style.strokeDashoffset = 157 * (1 - pc); $("rgt").textContent = Math.round(pc * 100) + "%";
-  $("mkg").textContent = kg.toFixed(1); $("mtg").textContent = fmt(tg / 1000);
+  $("mkg").textContent = kg.toFixed(1);
+  $("mtg").textContent = pr >= 10000 ? fmt(pr / 1000) : (pr / 1000).toFixed(1);
   $("bkg").style.width = Math.max(0, Math.min(100, kg / Math.max(1, S.plan.kg) * 100)) + "%";
-  $("btg").style.width = Math.max(0, Math.min(100, tg / Math.max(1, S.plan.tg) * 100)) + "%";
+  $("btg").style.width = Math.max(0, Math.min(100, pr / Math.max(1, S.plan.tg) * 100)) + "%";
   $("plancard").className = "plan" + (planDone() ? " done" : "");
   $("leftc").textContent = ROUTE.length + " точка қалды";
   $("routekm").textContent = ROUTE.length ? (ROUTEKM / 1000).toFixed(1) + " км" : "аяқталды";
+  renderZone();
   const d = astana();
   $("dayline").textContent = WD[d.getDay()] + " · " + d.getDate() + " " + MN[d.getMonth()] + " · Астана";
   $("wstat").textContent = S.off[dkey()] ? "Демалыс" : "Жұмыс күні";
@@ -202,6 +233,20 @@ function renderDay() {
   if (!t.route.length) L.innerHTML = '<div class="empty">Маршрут бос.<br>«Күнді бастау» басыңыз.</div>';
   L.querySelectorAll(".item").forEach(el => el.onclick = () => openPoint(el.dataset.k));
 }
+function renderZone() {
+  const t = T(), all = allPoints();
+  if (!t.route.length) { $("zonename").textContent = "Маршрут құрылмаған";
+    $("zoneinfo").textContent = "«Күнді бастау» басыңыз"; $("zcov").style.width = "0%"; $("covtxt").textContent = ""; return; }
+  $("zonename").textContent = t.zone || "Бүгінгі аймақ";
+  const ages = t.route.map(k => daysAgo(k)).filter(x => x < 9999);
+  const never = t.route.filter(k => daysAgo(k) >= 9999).length;
+  const avg = ages.length ? Math.round(ages.reduce((a, b) => a + b, 0) / ages.length) : 0;
+  $("zoneinfo").textContent = t.route.length + " точка · " +
+    (never ? never + " әлі кірілмеген" : "орташа " + avg + " күн бұрын барылған");
+  const seen = Object.keys(S.lastv).length;
+  $("zcov").style.width = Math.min(100, seen / Math.max(1, all.length) * 100) + "%";
+  $("covtxt").textContent = "Базаның " + seen + " / " + all.length + " дүкені аралды";
+}
 const esc = s => String(s || "").replace(/[<>&]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]));
 
 /* ================= Күнді бастау / аяқтау ================= */
@@ -227,8 +272,8 @@ function finishDay() {
      <div class="r"><span>Алмады</span><b>${vs.filter(k => t.v[k].st === "no").length}</b></div>
      <div class="r"><span>Жабық</span><b>${vs.filter(k => t.v[k].st === "closed").length}</b></div>
      <div class="r"><span>Құрт</span><b>${kg.toFixed(1)} кг</b></div>
-     <div class="r"><span>Пайда</span><b>${fmt(pr)} ₸</b></div>
-     <div class="m"><span>Түскен сома</span><b>${fmt(tg)} ₸</b></div></div>
+     <div class="r"><span>Түскен сома</span><b>${fmt(tg)} ₸</b></div>
+     <div class="m"><span>Таза пайда</span><b>${fmt(pr)} ₸</b></div></div>
    <div style="height:14px"></div>
    <button class="btn dark" id="bcloseday">Күнді жабу</button>
    <div style="height:9px"></div><button class="btn gh" onclick="closeSheet()">Жалғастыру</button>`;
@@ -278,6 +323,7 @@ function setRes(st) {
   const t = T(), p = P(atKey); if (!p) return;
   undoSnap = null;
   t.v[atKey] = { st, kg: 0, sum: 0, time: hhmm(arrivedAt) };
+  S.lastv[atKey] = dkey();
   ME = { lat: p.lat, lon: p.lon };
   saveSoon(); closeSheet(); renderDay(); MAP.refresh(); haptic("err");
   autoExtra("«" + p.n + "» " + (st === "closed" ? "жабық" : "алмады"), true);
@@ -345,6 +391,7 @@ function saveSale() {
   const t = T(), p = P(atKey);
   undoSnap = null;
   t.v[atKey] = { st: "sold", kg: selKg, sum: selKg * selPrice, cat: sel, price: selPrice, time: hhmm(arrivedAt) };
+  S.lastv[atKey] = dkey();
   if (!S.px[atKey]) S.px[atKey] = {}; S.px[atKey][sel] = selPrice;
   ME = { lat: p.lat, lon: p.lon };
   saveSoon(); closeSheet(); renderDay(); MAP.refresh(); haptic("ok");
@@ -362,7 +409,9 @@ function autoExtra(reason, failed) {
   const inRoute = new Set(t.route);
   const vk = visitedKeys(); let from = ME;
   if (vk.length) { const l = P(vk[vk.length - 1]); if (l) from = l; }
-  const res = allPoints().filter(p => !inRoute.has(p.k)).sort((a, b) => dist(from, a) - dist(from, b))[0];
+  let pool = allPoints().filter(p => !inRoute.has(p.k) && daysAgo(p.k) >= S.cycle);
+  if (!pool.length) pool = allPoints().filter(p => !inRoute.has(p.k));
+  const res = pool.sort((a, b) => dist(from, a) - dist(from, b))[0];
   if (!res) { toast("Резервте точка қалмады"); return; }
   t.route.push(res.k); (t.extra = t.extra || []).push(res.k);
   saveSoon();
@@ -508,7 +557,25 @@ function bindPlan() {
   const on = () => { S.plan = { pts: cl($("s_pts").value, 40), kg: cl($("s_kg").value, 30),
     tg: Math.min(9e8, Math.max(1000, +$("s_tg").value || 200000)) }; saveSoon(); renderDay(); renderCal(); };
   ["s_pts", "s_kg", "s_tg"].forEach(i => $(i).oninput = on);
+  $("s_cyc").oninput = () => { const v = Math.floor(+$("s_cyc").value);
+    S.cycle = (!isFinite(v) || v < 1) ? 14 : Math.min(v, 365); saveSoon(); renderZone(); };
 }
+$("bremake").onclick = () => {
+  const t = T();
+  if (visitedKeys().length) {
+    $("sbody").innerHTML = `<div class="sh">Маршрутты қайта құру</div>
+     <div class="sa">Бүгін ${visitedKeys().length} точкаға кірдіңіз</div><div style="height:14px"></div>
+     <div class="banner"><div class="ic">⚠️</div><div><b>Абайлаңыз</b>
+       <p>Қайта құрсаңыз кірілмеген точкалар ауысады. Кірілгендер сақталады.</p></div></div>
+     <div style="height:14px"></div>
+     <button class="btn pri" id="rmok">Иә, қайта құру</button>
+     <div style="height:9px"></div><button class="btn gh" onclick="closeSheet()">Болдырмау</button>`;
+    showSheet();
+    $("rmok").onclick = () => { const keep = visitedKeys(); makeRoute(true);
+      T().route = Array.from(new Set(keep.concat(T().route)));
+      saveSoon(); closeSheet(); renderDay(); MAP.refresh(); toast("Маршрут жаңартылды"); };
+  } else { makeRoute(true); renderDay(); MAP.refresh(); haptic("ok"); toast("Жаңа аймақ таңдалды"); }
+};
 $("breset").onclick = () => { const d = dkey(); delete S.hist[d]; saveSoon(); renderDay(); MAP.refresh();
   haptic("ok"); toast("Бүгінгі күн тазаланды"); };
 $("bsync").onclick = () => { save(); toast("Сақталуда…"); };
@@ -533,6 +600,12 @@ function renderCal() {
   for (let i = 0; i < 7; i++) { const k = dkey(new Date(now.getTime() - i * 86400000)), h = S.hist[k];
     if (!h) continue; Object.values(h.v || {}).forEach(r => { p++; kg += r.kg || 0; tg += r.sum || 0; }); }
   $("s7p").textContent = p; $("s7k").textContent = kg.toFixed(1); $("s7t").textContent = fmt(tg / 1000);
+  // базаны қамту
+  const all = allPoints(), seen = Object.keys(S.lastv).filter(k => PMAP[k]).length;
+  const fresh = Object.keys(S.lastv).filter(k => PMAP[k] && daysAgo(k) < S.cycle).length;
+  $("covn").textContent = seen + " / " + all.length;
+  $("covbar").style.width = Math.min(100, seen / Math.max(1, all.length) * 100) + "%";
+  $("covdet").textContent = "Соңғы " + S.cycle + " күнде: " + fresh + " дүкен · қалғаны кезекте: " + (all.length - fresh);
   // тарих
   const H = $("hist"); H.innerHTML = "";
   const days = Object.keys(S.hist).sort().reverse().slice(0, 14);
@@ -566,7 +639,7 @@ async function drawRoad() {
   if (!MAP.ok) return;
   const wp = [{ lat: ME.lat, lon: ME.lon }, ...ROUTE.slice(0, 6)];
   if (wp.length < 2) { MAP.road.clearLayers(); roadInfo = null; STEPS = []; paintNav(); return; }
-  const key = wp.map(p => p.lat.toFixed(4) + "," + p.lon.toFixed(4)).join(";");
+  const key = wp.map(p => p.lat.toFixed(FOLLOW ? 4 : 3) + "," + p.lon.toFixed(FOLLOW ? 4 : 3)).join(";");
   if (key === roadKey) return; roadKey = key;
   try {
     const co = wp.map(p => p.lon + "," + p.lat).join(";");
@@ -574,7 +647,8 @@ async function drawRoad() {
     const j = await r.json();
     if (!j.routes || !j.routes[0]) throw 0;
     const R = j.routes[0];
-    roadInfo = { geo: R.geometry.coordinates.map(c => [c[1], c[0]]), leg: R.legs[0], total: R.distance };
+    roadInfo = { geo: R.geometry.coordinates.map(c => [c[1], c[0]]), leg: R.legs[0], total: R.distance,
+      from: { lat: ME.lat, lon: ME.lon } };
     STEPS = (R.legs[0] && R.legs[0].steps) || [];
   } catch (e) { roadInfo = null; STEPS = []; }
   MAP.road.clearLayers();
@@ -587,6 +661,48 @@ async function drawRoad() {
   }
   paintNav();
 }
+function navRefresh() {
+  if (!FOLLOW) return;
+  const n = nextPt();
+  if (!n) { MAP.follow(false); return; }
+  $("nvDest").textContent = n.n; $("nvDestA").textContent = n.a;
+  $("nvSpd").textContent = Math.round(spd);
+  if (roadInfo && roadInfo.leg) {
+    const st = STEPS;
+    const nx = st[1] || st[0];
+    // бұрылысқа дейінгі қашықтық — ағымдағы орыннан тірідей
+    let toM = st.length ? st[0].distance : dist(ME, n);
+    const ml = nx && nx.maneuver && nx.maneuver.location;
+    if (ml) toM = Math.min(toM, dist(ME, { lat: ml[1], lon: ml[0] }));
+    const m = nx ? mnvText(nx) : { ic: "↑", tx: "Түзу жүріңіз", nm: "" };
+    $("nvIc").textContent = m.ic;
+    $("nvDist").innerHTML = toM >= 1000 ? (toM / 1000).toFixed(1) + ' <small>км</small>'
+      : toM < 15 ? "Қазір" : Math.round(toM / 10) * 10 + ' <small>м</small>';
+    $("nvStreet").textContent = m.nm || m.tx;
+    const nx2 = st[2];
+    if (nx2) { const m2 = mnvText(nx2); $("nvThenIc").textContent = m2.ic; $("nvThen").textContent = "содан кейін " + m2.tx; }
+    else { $("nvThenIc").textContent = "🏁"; $("nvThen").textContent = "дүкенге келу"; }
+    const gone = roadInfo.from ? dist(roadInfo.from, ME) : 0;
+    const left = Math.max(dist(ME, n), roadInfo.leg.distance - gone);
+    const secs = roadInfo.leg.duration * (left / Math.max(1, roadInfo.leg.distance));
+    $("nvLeft").textContent = left >= 1000 ? (left / 1000).toFixed(1) + " км" : Math.round(left) + " м";
+    $("nvMin").textContent = Math.max(1, Math.round(secs / 60));
+    $("nvEta").textContent = hhmm(new Date(astana().getTime() + secs * 1000));
+  } else {
+    const d = dist(ME, n);
+    $("nvIc").textContent = "↑"; $("nvDist").innerHTML = fmt(d) + ' <small>м</small>';
+    $("nvStreet").textContent = n.a; $("nvThenIc").textContent = "🏁"; $("nvThen").textContent = "дүкенге келу";
+    $("nvLeft").textContent = d >= 1000 ? (d / 1000).toFixed(1) + " км" : Math.round(d) + " м";
+    $("nvMin").textContent = Math.max(1, Math.round(d / 420));
+    $("nvEta").textContent = hhmm(new Date(astana().getTime() + d / 7 * 1000));
+  }
+  // жеткенде
+  const dd = dist(ME, n);
+  if (dd <= 40 && !navArrived) { navArrived = true; haptic("ok");
+    toast("📍 " + n.n + " — келдіңіз"); }
+  if (dd > 90) navArrived = false;
+}
+let navArrived = false;
 function paintNav() {
   const n = nextPt(), off = visitedKeys().length;
   if (!n) { $("nnm").textContent = "Барлық точка өтті 🎉"; $("nad").textContent = "Күнді аяқтауға болады";
@@ -622,7 +738,9 @@ $("mnv").onclick = () => {
 $("bskip").onclick = () => { const n = nextPt(); if (!n) return;
   const t = T(); t.route = t.route.filter(k => k !== n.k);
   const inR = new Set(t.route);
-  const rep = allPoints().filter(p => !inR.has(p.k)).sort((a, b) => dist(ME, a) - dist(ME, b))[0];
+  let pl = allPoints().filter(p => !inR.has(p.k) && daysAgo(p.k) >= S.cycle);
+  if (!pl.length) pl = allPoints().filter(p => !inR.has(p.k));
+  const rep = pl.sort((a, b) => dist(ME, a) - dist(ME, b))[0];
   if (rep) t.route.push(rep.k);
   saveSoon(); renderDay(); MAP.refresh(); toast("«" + n.n + "» өткізілді" + (rep ? " · орнына " + rep.n : "")); };
 
@@ -651,31 +769,86 @@ const MAP = {
       const col = i === 0 ? "#1f6feb" : ((t.extra || []).indexOf(p.k) >= 0 ? "#b45f06" : "#98a0ac");
       L.marker([p.lat, p.lon], { icon: L.divIcon({ className: "pin", html: `<div style="background:${col}">${off + i + 1}</div>`, iconSize: [26, 26], iconAnchor: [13, 13] }) })
         .addTo(this.layer).on("click", () => openPoint(p.k)); });
-    L.marker([ME.lat, ME.lon], { icon: L.divIcon({ className: "me", html: "<div></div>", iconSize: [18, 18], iconAnchor: [9, 9] }) }).addTo(this.layer);
+    this.meMk = L.marker([ME.lat, ME.lon], { icon: L.divIcon({
+      className: FOLLOW ? "mearrow" : "me", html: "<div></div>",
+      iconSize: FOLLOW ? [20, 24] : [18, 18], iconAnchor: FOLLOW ? [10, 12] : [9, 9] }) }).addTo(this.layer);
     paintNav();
     clearTimeout(this._t); this._t = setTimeout(drawRoad, 400);
   },
-  center() { if (this.ok) this.map.setView([ME.lat, ME.lon], 16); }
+  center() { if (this.ok) this.map.setView([ME.lat, ME.lon], FOLLOW ? 17 : 16); },
+  follow(on) {
+    FOLLOW = on === undefined ? !FOLLOW : on;
+    document.querySelector(".mapwrap").classList.toggle("follow", FOLLOW);
+    document.body.classList.toggle("nav", FOLLOW);
+    $("mfollow").classList.toggle("act", FOLLOW);
+    if (FOLLOW) {
+      if (!nextPt()) { FOLLOW = false; document.body.classList.remove("nav");
+        document.querySelector(".mapwrap").classList.remove("follow");
+        toast("Барлық точка өтті"); return; }
+      this.center(); haptic("medium"); navRefresh();
+      try { TG && TG.BackButton && TG.BackButton.show(); } catch (e) {}
+    } else {
+      $("maprot").style.transform = "rotate(0deg)";
+      try { if (!$("sheet").classList.contains("on")) TG && TG.BackButton && TG.BackButton.hide(); } catch (e) {}
+    }
+    setTimeout(() => { this.map && this.map.invalidateSize(); this.refresh(); }, 120);
+  },
+  followTick() {
+    if (!this.ok) return;
+    if (FOLLOW) {
+      this.map.setView([ME.lat, ME.lon], this.map.getZoom(), { animate: false });
+      $("maprot").style.transform = `rotate(${-HEAD}deg)`;
+    }
+    if (this.meMk) this.meMk.setLatLng([ME.lat, ME.lon]);
+  }
 };
 $("mz1").onclick = () => MAP.ok && MAP.map.setZoom(MAP.map.getZoom() + 1);
 $("mz2").onclick = () => MAP.ok && MAP.map.setZoom(MAP.map.getZoom() - 1);
 $("mc").onclick = () => MAP.center();
+$("mfollow").onclick = () => MAP.follow();
+$("nvExit").onclick = () => MAP.follow(false);
+$("nvArrive").onclick = () => { MAP.follow(false); $("barr").click(); };
+$("mloc").onclick = locateMe;
 
 /* ================= GPS ================= */
+let watchId = null, lastRefresh = 0;
 function startGPS() {
   if (!navigator.geolocation) { $("gpsi").textContent = "GPS қолжетімсіз"; return; }
-  navigator.geolocation.watchPosition(pos => {
-    const first = !gpsOk;
-    gpsOk = true;
-    ME = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+  if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+  watchId = navigator.geolocation.watchPosition(pos => {
+    const first = !gpsOk; gpsOk = true;
+    const nw = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+    // бағыт: GPS-тен алынады, болмаса жылжудан есептеледі
+    if (typeof pos.coords.heading === "number" && !isNaN(pos.coords.heading) && pos.coords.speed > 0.6)
+      HEAD = pos.coords.heading;
+    else if (PREV && dist(PREV, nw) > 4) HEAD = bearing(PREV, nw);
+    if (!PREV || dist(PREV, nw) > 4) PREV = { ...nw };
+    spd = (pos.coords.speed || 0) * 3.6;
+    ME = nw;
     $("gpsi").className = "gps on";
-    $("gpsi").textContent = "GPS ±" + Math.round(pos.coords.accuracy) + " м";
+    $("gpsi").textContent = "GPS ±" + Math.round(pos.coords.accuracy) + " м" + (spd > 2 ? " · " + Math.round(spd) + " км/сағ" : "");
     if (first) { MAP.center(); renderDay(); renderPts(); }
-    MAP.refresh();
+    MAP.followTick(); navRefresh();
+    const now = Date.now();
+    if (now - lastRefresh > (FOLLOW ? 1800 : 6000)) { lastRefresh = now; MAP.refresh(); }
   }, err => {
     $("gpsi").className = "gps off";
-    $("gpsi").textContent = err.code === 1 ? "GPS рұқсат жоқ" : "GPS сигналы жоқ";
-  }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
+    $("gpsi").textContent = err.code === 1 ? "GPS рұқсат жоқ — баптаудан қосыңыз" : "GPS сигналы жоқ";
+  }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 });
+}
+// «Мен қайдамын» — бірден анықтап, картаны сол жерге апару
+function locateMe() {
+  haptic("medium");
+  $("gpsi").className = "gps off"; $("gpsi").textContent = "GPS ізделуде…";
+  if (!navigator.geolocation) { toast("GPS қолжетімсіз"); return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    ME = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+    gpsOk = true;
+    $("gpsi").className = "gps on"; $("gpsi").textContent = "GPS ±" + Math.round(pos.coords.accuracy) + " м";
+    MAP.center(); renderDay(); MAP.refresh(); haptic("ok");
+    toast("📍 Орныңыз анықталды (±" + Math.round(pos.coords.accuracy) + " м)");
+  }, e => { toast(e.code === 1 ? "GPS рұқсаты жоқ" : "GPS табылмады"); },
+  { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
 }
 
 /* ================= Навигация (беттер) ================= */
@@ -683,7 +856,7 @@ function go(p) {
   document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x.dataset.p === p));
   document.querySelectorAll(".page").forEach(x => x.classList.remove("on"));
   $("p-" + p).classList.add("on");
-  if (p === "map" && MAP.ok) setTimeout(() => { MAP.map.invalidateSize(); MAP.refresh(); }, 60);
+  if (p === "map" && MAP.ok) setTimeout(() => { MAP.map.invalidateSize(); MAP.refresh(); MAP.followTick(); }, 80);
   if (p === "pts") renderPts();
   if (p === "rep") renderCal();
   haptic("light");
@@ -694,6 +867,7 @@ document.querySelectorAll(".tab").forEach(t => t.onclick = () => go(t.dataset.p)
 load(() => {
   reindex();
   $("s_pts").value = S.plan.pts; $("s_kg").value = S.plan.kg; $("s_tg").value = S.plan.tg;
+  $("s_cyc").value = S.cycle;
   bindPlan();
   const u = TG && TG.initDataUnsafe && TG.initDataUnsafe.user;
   $("uname").textContent = u ? (u.first_name || "") + (u.username ? " · @" + u.username : "") : "Браузер режимі";

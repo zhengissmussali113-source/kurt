@@ -61,7 +61,48 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Robot
 .banner b{font-size:13px;display:block;margin-bottom:2px}
 .banner p{margin:0;font-size:11.5px;color:#8a6a2a;line-height:1.45}
 .mapwrap{flex:1;position:relative;overflow:hidden}
-#map{position:absolute;inset:0;background:#dfe3e8}
+.mapshift{position:absolute;inset:0;transition:transform .4s}
+.mapwrap.follow .mapshift{transform:translateY(13%)}
+.maprot{position:absolute;left:-30%;top:-30%;width:160%;height:160%;transform-origin:50% 50%;transition:transform .5s linear}
+#map{width:100%;height:100%;background:#dfe3e8}
+.locbtn{position:absolute;left:12px;top:52px;z-index:500;background:#fff;border:none;border-radius:13px;
+ padding:9px 13px;font-size:12px;font-weight:800;color:#1f6feb;box-shadow:0 4px 14px rgba(16,24,40,.2);cursor:pointer;font-family:inherit}
+.mbtn.act{background:#1f6feb;color:#fff}
+/* ===== Навигация режимі ===== */
+body.nav .hdr,body.nav .tabs{display:none}
+body.nav .navcard{display:none}
+body.nav .locbtn{display:none}
+body.nav .mapbtns{top:auto;bottom:calc(env(safe-area-inset-bottom) + 205px)}
+.navtop{position:absolute;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 10px);z-index:600;display:none}
+body.nav .navtop{display:block}
+.navtop .card2{background:#1f6feb;color:#fff;border-radius:20px;padding:14px 16px;
+ box-shadow:0 10px 30px rgba(16,24,40,.35);display:flex;align-items:center;gap:14px}
+.navtop .ic{font-size:34px;line-height:1;flex:none}
+.navtop .dd{font-size:30px;font-weight:800;letter-spacing:-1px;line-height:1}
+.navtop .dd small{font-size:15px;font-weight:700;opacity:.8}
+.navtop .st{font-size:14px;font-weight:700;opacity:.95;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.navtop .then{background:rgba(255,255,255,.92);color:#11151c;border-radius:14px;margin-top:8px;
+ padding:8px 13px;font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:8px;box-shadow:0 6px 18px rgba(16,24,40,.2)}
+.navbot{position:absolute;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom) + 10px);z-index:600;display:none}
+body.nav .navbot{display:block}
+.navbot .bar{background:#fff;border-radius:20px;padding:12px 14px;box-shadow:0 10px 30px rgba(16,24,40,.28);height:auto}
+.navbot .kpi{display:flex;align-items:center;gap:10px}
+.navbot .kpi .v{flex:1;text-align:center}
+.navbot .kpi b{display:block;font-size:19px;font-weight:800;letter-spacing:-.5px}
+.navbot .kpi span{font-size:9.5px;color:#8a919e;font-weight:700}
+.navbot .x{width:40px;height:40px;border-radius:14px;background:#eef0f4;border:none;font-size:17px;flex:none;cursor:pointer}
+.navbot .dst{font-size:13px;font-weight:800;text-align:center;margin-bottom:2px}
+.navbot .dsa{font-size:11px;color:#8a919e;text-align:center;margin-bottom:9px}
+.navbot .go{margin-top:10px}
+.spdo{position:absolute;left:14px;bottom:calc(env(safe-area-inset-bottom) + 205px);z-index:600;width:56px;height:56px;
+ border-radius:50%;background:#fff;border:4px solid #e5484d;display:none;flex-direction:column;align-items:center;justify-content:center;
+ box-shadow:0 4px 14px rgba(0,0,0,.25)}
+body.nav .spdo{display:flex}
+.spdo b{font-size:18px;font-weight:800;line-height:1}
+.spdo span{font-size:7.5px;color:#8a919e;font-weight:800}
+.me div{transition:none}
+.mearrow div{width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;
+ border-bottom:24px solid #1f6feb;filter:drop-shadow(0 2px 5px rgba(0,0,0,.4))}
 .navcard{position:absolute;left:12px;right:12px;bottom:12px;background:#fff;border-radius:20px;padding:13px;box-shadow:0 12px 30px rgba(16,24,40,.22);z-index:500}
 .navcard .t{display:flex;align-items:center;gap:11px}
 .arrow{width:44px;height:44px;border-radius:15px;background:#1f6feb;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex:none;transition:transform .4s}
@@ -124,6 +165,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Robot
 .toast{position:fixed;left:16px;right:16px;bottom:100px;background:#11151c;color:#fff;border-radius:14px;padding:12px 14px;
  font-size:13px;font-weight:600;z-index:1200;opacity:0;transform:translateY(10px);transition:.28s;pointer-events:none;line-height:1.4}
 .toast.on{opacity:1;transform:translateY(0)}
+body.nav .toast{bottom:calc(env(safe-area-inset-bottom) + 215px)}
 .empty{text-align:center;color:#98a0ac;font-size:13px;padding:26px 10px;line-height:1.5}
 .srch{width:100%;border:none;background:#eef0f4;border-radius:13px;padding:11px 13px;font-size:16px;font-family:inherit;outline:none;margin-bottom:12px}
 .swipe-del{background:#fdeaea;color:#cf3438;border:none;border-radius:10px;padding:7px 10px;font-size:11px;font-weight:800;cursor:pointer;flex:none}
@@ -155,7 +197,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Robot
       </div>
       <div class="metrics">
         <div class="metric"><div class="k">ҚҰРТ</div><div class="v"><span id="mkg">0</span> / <span id="pkg">30</span> кг</div><div class="bar"><i id="bkg"></i></div></div>
-        <div class="metric"><div class="k">СОМА</div><div class="v"><span id="mtg">0</span> / <span id="ptg">200</span> мың</div><div class="bar"><i id="btg"></i></div></div>
+        <div class="metric"><div class="k">ПАЙДА</div><div class="v"><span id="mtg">0</span> / <span id="ptg">200</span> мың</div><div class="bar"><i id="btg"></i></div></div>
       </div>
     </div>
 
@@ -168,9 +210,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Robot
       <div class="ic">⚡️</div><div><b>Қосымша точка қосылды</b><p id="abtxt"></p></div>
     </div>
 
+    <div class="sect"><span>Бүгінгі аймақ</span><span class="act" id="bremake">Қайта құру</span></div>
+    <div class="card" style="padding:12px 13px">
+      <div style="font-size:13.5px;font-weight:800" id="zonename">—</div>
+      <div style="font-size:11.5px;color:#8a919e;margin-top:3px" id="zoneinfo">—</div>
+      <div class="bar" style="background:#eef0f4;margin-top:9px"><i id="zcov" style="background:#1f6feb"></i></div>
+      <div style="font-size:10.5px;color:#8a919e;margin-top:5px" id="covtxt">—</div>
+    </div>
     <div class="sect"><span>Маршрут реті</span><span class="act" id="routekm">—</span></div>
     <div class="card" id="todaylist"></div>
-    <div class="mini">Рет автоматты: тұрған жеріңізден ең жақыны → одан кейінгі ең жақыны.</div>
+    <div class="mini">40 точка таңертең бекітіледі. Реті ғана тұрған жеріңізге қарай өзгереді. Жоспар жабылмаса — біртіндеп қосымша точка беріледі.</div>
   </div></div>
 </div>
 
@@ -179,11 +228,36 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Robot
   <div class="hdr"><div class="row"><div><h1>Навигация</h1><div class="sub" id="navsub">—</div></div>
     <div class="tag o" id="leftc">—</div></div></div>
   <div class="mapwrap">
-    <div id="map"></div>
+    <div class="mapshift" id="mapshift"><div class="maprot" id="maprot"><div id="map"></div></div></div>
     <div class="gps off" id="gpsi">GPS іздеуде…</div>
     <div class="mapbtns">
-      <button class="mbtn" id="mz1">＋</button><button class="mbtn" id="mz2">－</button><button class="mbtn" id="mc">◎</button>
+      <button class="mbtn" id="mz1">＋</button><button class="mbtn" id="mz2">－</button>
+      <button class="mbtn" id="mfollow" title="Мені қадағалау">🧭</button>
+      <button class="mbtn" id="mc">◎</button>
     </div>
+    <button class="locbtn" id="mloc">📍 Мен қайдамын</button>
+
+    <div class="navtop">
+      <div class="card2"><div class="ic" id="nvIc">↑</div>
+        <div style="flex:1;min-width:0">
+          <div class="dd" id="nvDist">— <small>м</small></div>
+          <div class="st" id="nvStreet">жол есептелуде…</div></div></div>
+      <div class="then"><span id="nvThenIc">·</span><span id="nvThen">—</span></div>
+    </div>
+
+    <div class="spdo"><b id="nvSpd">0</b><span>км/сағ</span></div>
+
+    <div class="navbot"><div class="bar">
+      <div class="dst" id="nvDest">—</div>
+      <div class="dsa" id="nvDestA">—</div>
+      <div class="kpi">
+        <div class="v"><b id="nvLeft">—</b><span>ҚАЛДЫ</span></div>
+        <div class="v"><b id="nvEta">—</b><span>КЕЛУ</span></div>
+        <div class="v"><b id="nvMin">—</b><span>МИН</span></div>
+        <button class="x" id="nvExit">✕</button>
+      </div>
+      <button class="btn ok go" id="nvArrive">Келдім — жазу</button>
+    </div></div>
     <div class="navcard">
       <div class="t"><div class="arrow" id="narr">↑</div>
         <div style="flex:1;min-width:0"><div class="nm" id="nnm">—</div><div class="ad" id="nad">—</div></div>
@@ -219,6 +293,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Robot
     <div class="mini">Күнді басып «Жұмыс ⇄ Демалыс» ауыстырасыз.</div>
     <div class="sect">Соңғы 7 күн</div>
     <div class="stat"><div><b id="s7p">0</b><span>ТОЧКА</span></div><div><b id="s7k">0</b><span>КГ</span></div><div><b id="s7t">0</b><span>МЫҢ ₸</span></div></div>
+    <div class="sect">Базаны аралау</div>
+    <div class="card" style="padding:13px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700">
+        <span>Кірілген дүкен</span><span id="covn">—</span></div>
+      <div class="bar" style="background:#eef0f4;margin-top:8px"><i id="covbar" style="background:#12a150"></i></div>
+      <div style="font-size:11px;color:#8a919e;margin-top:6px" id="covdet">—</div>
+    </div>
     <div class="sect">Күндер тарихы</div>
     <div class="card" id="hist"></div>
   </div></div>
@@ -232,7 +313,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Robot
     <div class="card" style="padding:14px 13px">
       <div class="f"><label>Точка саны</label><input id="s_pts" type="number" inputmode="numeric"></div>
       <div class="f"><label>Құрт (кг)</label><input id="s_kg" type="number" inputmode="decimal"></div>
-      <div class="f" style="margin-bottom:0"><label>Сома (₸)</label><input id="s_tg" type="number" inputmode="numeric"></div>
+      <div class="f"><label>Күндік пайда (₸)</label><input id="s_tg" type="number" inputmode="numeric"></div>
+      <div class="f" style="margin-bottom:0"><label>Әр дүкенге қанша күнде бір рет кіру</label><input id="s_cyc" type="number" inputmode="numeric"></div>
     </div>
     <div class="mini">Үш шарттың кез келгені орындалса — күн жабылды.</div>
 
