@@ -3,7 +3,7 @@
    Карта: OpenStreetMap + OSRM (тегін)
 ================================================================= */
 const TG = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-const VER = "1.4";
+const VER = "1.6";
 const $ = id => document.getElementById(id);
 const fmt = n => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 
@@ -209,6 +209,7 @@ function renderDay() {
   const d = astana();
   $("dayline").textContent = WD[d.getDay()] + " · " + d.getDate() + " " + MN[d.getMonth()] + " · Астана";
   $("wstat").textContent = S.off[dkey()] ? "Демалыс" : "Жұмыс күні";
+  if (!t.route.length && t.made !== dkey()) { /* жаңа күн — маршрут бос */ }
   $("daybtn").className = "btn big " + (t.started ? "dan" : "ok");
   $("daybtn").textContent = t.started ? "■ Күнді аяқтау" : "▶︎ Күнді бастау";
   $("daymini").textContent = t.started ? "Күн жүріп жатыр." : "Басқан соң ең жақын дүкенге бағыт беріледі.";
@@ -578,8 +579,27 @@ $("bremake").onclick = () => {
       saveSoon(); closeSheet(); renderDay(); MAP.refresh(); toast("Маршрут жаңартылды"); };
   } else { makeRoute(true); renderDay(); MAP.refresh(); haptic("ok"); toast("Жаңа аймақ таңдалды"); }
 };
-$("breset").onclick = () => { const d = dkey(); delete S.hist[d]; saveSoon(); renderDay(); MAP.refresh();
-  haptic("ok"); toast("Бүгінгі күн тазаланды"); };
+$("breset").onclick = () => {
+  $("sbody").innerHTML = `<div class="sh">Тазалау</div><div class="sa">Не өшіру керек?</div>
+   <div style="height:16px"></div>
+   <button class="btn gh big" id="rz1">Бүгінгі күнді ғана</button>
+   <div class="mini">Бүгінгі маршрут пен белгілер өшеді. Бұрынғы күндер қалады.</div>
+   <div style="height:12px"></div>
+   <button class="btn dan big" id="rz2">Сынақ деректерін толық өшіру</button>
+   <div class="mini">Бүгінгі белгілер + «қашан барылды» жазбалары өшеді.
+     Ертең базаның басынан таза бастайсыз. Каталог, жоспар, бағалар сақталады.</div>
+   <div style="height:14px"></div><button class="btn gh" onclick="closeSheet()">Болдырмау</button>`;
+  showSheet();
+  $("rz1").onclick = () => { delete S.hist[dkey()]; saveSoon(); closeSheet(); renderDay(); MAP.refresh();
+    haptic("ok"); toast("Бүгінгі күн тазаланды"); };
+  $("rz2").onclick = () => {
+    const d = dkey();
+    delete S.hist[d];
+    Object.keys(S.lastv).forEach(k => { if (S.lastv[k] === d) delete S.lastv[k]; });
+    saveSoon(); closeSheet(); renderDay(); renderCal(); MAP.refresh();
+    haptic("ok"); toast("Сынақ деректері өшірілді — ертең таза бастайсыз");
+  };
+};
 $("bsync").onclick = () => { save(); toast("Сақталуда…"); };
 
 /* ================= Есеп / күнтізбе ================= */

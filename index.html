@@ -129,9 +129,24 @@ body.nav .spdo{display:flex}
 .pin div{width:26px;height:26px;border-radius:50%;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
 .me div{width:18px;height:18px;border-radius:50%;background:#1f6feb;border:3px solid #fff;box-shadow:0 0 0 6px rgba(31,111,235,.22)}
 .tabs{flex:none;background:#fff;border-top:1px solid #e9ebef;display:flex;padding:7px 4px calc(env(safe-area-inset-bottom) + 7px)}
-.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9.5px;font-weight:700;color:#98a0ac;cursor:pointer;padding-top:3px}
-.tab .i{font-size:19px;line-height:1}
-.tab.on{color:#1f6feb}
+.tabs{padding:8px 4px calc(env(safe-area-inset-bottom) + 8px);position:relative;
+ background:linear-gradient(115deg,#eef4ff,#f7f0ff,#eafaff,#eef4ff);background-size:400% 400%;
+ animation:tabflow 9s ease infinite;border-top:1px solid rgba(31,111,235,.14)}
+@keyframes tabflow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes tabglow{0%,100%{transform:scale(.84);opacity:.55}50%{transform:scale(1.16);opacity:1}}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;font-weight:600;
+ color:#9aa1ad;cursor:pointer;padding-top:2px;letter-spacing:-.1px;transition:color .18s;
+ position:relative;z-index:2}
+.tab.on .i::before{content:"";position:absolute;inset:-11px;border-radius:50%;z-index:-1;
+ background:radial-gradient(circle,rgba(124,58,237,.28),transparent 68%);
+ animation:tabglow 3.2s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.tabs,.tab.on .i::before{animation:none}}
+.tab .i{width:25px;height:25px;display:flex;align-items:center;justify-content:center}
+.tab .i svg{width:24px;height:24px;display:block;fill:none;stroke:currentColor;stroke-width:1.7;
+ stroke-linecap:round;transition:transform .18s,stroke-width .18s}
+.tab.on{color:#1f6feb;font-weight:800}
+.tab.on .i svg{stroke-width:2.1;transform:translateY(-1px) scale(1.04)}
+.tab:active .i svg{transform:scale(.9)}
 .mask{position:fixed;inset:0;background:rgba(10,14,20,.45);opacity:0;pointer-events:none;transition:.25s;z-index:900}
 .mask.on{opacity:1;pointer-events:auto}
 .sheet{position:fixed;left:0;right:0;bottom:0;background:#f5f6f8;border-radius:26px 26px 0 0;transform:translateY(102%);
@@ -334,18 +349,18 @@ body.nav .toast{bottom:calc(env(safe-area-inset-bottom) + 215px)}
       <div class="item" id="bsync"><div class="dot" style="background:#1f6feb">☁︎</div>
         <div class="it"><div class="n">Сақтау күйі</div><div class="a" id="syncst">—</div></div><span class="chev">›</span></div>
       <div class="item" id="breset"><div class="dot" style="background:#e5484d">⟲</div>
-        <div class="it"><div class="n">Бүгінгі күнді тазалау</div><div class="a">Барлық белгіні өшіру</div></div><span class="chev">›</span></div>
+        <div class="it"><div class="n">Тазалау</div><div class="a">Бүгінгі күн немесе сынақ деректері</div></div><span class="chev">›</span></div>
     </div>
     <div class="mini" id="verline"></div>
   </div></div>
 </div>
 
 <div class="tabs">
-  <div class="tab on" data-p="day"><div class="i">🎯</div>Күн</div>
-  <div class="tab" data-p="map"><div class="i">🧭</div>Карта</div>
-  <div class="tab" data-p="pts"><div class="i">📍</div>Точка</div>
-  <div class="tab" data-p="rep"><div class="i">📊</div>Есеп</div>
-  <div class="tab" data-p="set"><div class="i">⚙️</div>Баптау</div>
+  <div class="tab on" data-p="day"><div class="i"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="3.3"/><path d="M12 1.6v2.6M12 19.8v2.6M1.6 12h2.6M19.8 12h2.6"/></svg></div>Күн</div>
+  <div class="tab" data-p="map"><div class="i"><svg viewBox="0 0 24 24"><path d="M12 2.4 19.6 20.8 12 16.9 4.4 20.8z" stroke-linejoin="round"/></svg></div>Карта</div>
+  <div class="tab" data-p="pts"><div class="i"><svg viewBox="0 0 24 24"><path d="M12 21.2s7.1-6.3 7.1-11.2a7.1 7.1 0 1 0-14.2 0c0 4.9 7.1 11.2 7.1 11.2z"/><circle cx="12" cy="9.8" r="2.7"/></svg></div>Точка</div>
+  <div class="tab" data-p="rep"><div class="i"><svg viewBox="0 0 24 24"><path d="M3.4 20.6h17.2" stroke-linecap="round"/><path d="M7.4 20.6v-5" stroke-linecap="round"/><path d="M12 20.6v-9.6" stroke-linecap="round"/><path d="M16.6 20.6v-6.8" stroke-linecap="round"/></svg></div>Есеп</div>
+  <div class="tab" data-p="set"><div class="i"><svg viewBox="0 0 24 24"><path d="M3.2 6.6h10.4M18.4 6.6h2.4"/><circle cx="16" cy="6.6" r="2.3"/><path d="M3.2 12h3.5M11.3 12h9.5"/><circle cx="9" cy="12" r="2.3"/><path d="M3.2 17.4h8.5M16.3 17.4h4.5"/><circle cx="14" cy="17.4" r="2.3"/></svg></div>Баптау</div>
 </div>
 
 <div class="mask" id="mask"></div>
@@ -354,7 +369,7 @@ body.nav .toast{bottom:calc(env(safe-area-inset-bottom) + 215px)}
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="points.js?v=14"></script>
-<script src="app.js?v=14"></script>
+<script src="points.js?v=16"></script>
+<script src="app.js?v=16"></script>
 </body>
 </html>
