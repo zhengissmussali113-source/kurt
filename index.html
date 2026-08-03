@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Құрт сату</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%;overscroll-behavior:none}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif;
+ background:#f5f6f8;color:#11151c;display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
+.hdr{flex:none;background:#fff;padding:calc(env(safe-area-inset-top) + 8px) 16px 11px;border-bottom:1px solid #e9ebef}
+.hdr h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-.4px}
+.hdr .sub{font-size:12px;color:#8a919e;margin-top:2px}
+.hdr .row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.body::-webkit-scrollbar{width:0}
+.pad{padding:14px 16px 24px}
+.page{display:none;height:100%;flex-direction:column;overflow:hidden}
+.page.on{display:flex}
+.plan{background:linear-gradient(145deg,#1f6feb,#1450b4);border-radius:22px;padding:16px;color:#fff;box-shadow:0 10px 22px rgba(31,111,235,.26)}
+.plan.done{background:linear-gradient(145deg,#12a150,#0b7a3c);box-shadow:0 10px 22px rgba(18,161,80,.26)}
+.plan .top{display:flex;justify-content:space-between;align-items:flex-start}
+.plan .lbl{font-size:11.5px;opacity:.85;font-weight:600}
+.plan .big{font-size:31px;font-weight:800;line-height:1.05;margin-top:2px;letter-spacing:-1px}
+.plan .big small{font-size:15px;font-weight:600;opacity:.75}
+.ring{width:60px;height:60px;flex:none;position:relative}
+.ring svg{transform:rotate(-90deg)}
+.ring span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
+.metrics{display:flex;gap:8px;margin-top:13px}
+.metric{flex:1;background:rgba(255,255,255,.15);border-radius:13px;padding:8px 9px}
+.metric .k{font-size:10px;opacity:.85;font-weight:600}
+.metric .v{font-size:15px;font-weight:800;margin-top:1px}
+.bar{height:4px;border-radius:3px;background:rgba(255,255,255,.25);margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:#fff;border-radius:3px;transition:width .5s}
+.sect{font-size:11.5px;font-weight:800;color:#8a919e;text-transform:uppercase;letter-spacing:.5px;margin:20px 2px 9px;display:flex;justify-content:space-between;align-items:center}
+.sect span.act{color:#1f6feb;text-transform:none;font-size:12px;font-weight:700}
+.card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.item{display:flex;align-items:center;gap:11px;padding:12px 13px;border-bottom:1px solid #f0f2f5}
+.item:last-child{border-bottom:none}
+.dot{width:34px;height:34px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;background:#aab2bf}
+.dot.sold{background:#12a150}.dot.no{background:#e5484d}.dot.cls{background:#6b7280}
+.dot.next{background:#1f6feb;box-shadow:0 0 0 4px rgba(31,111,235,.18)}
+.it{flex:1;min-width:0}
+.it .n{font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it .a{font-size:11.5px;color:#8a919e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.tag{font-size:10px;font-weight:800;padding:3px 7px;border-radius:7px;flex:none}
+.tag.g{background:#e7f7ee;color:#0d8a44}.tag.r{background:#fdeaea;color:#cf3438}
+.tag.b{background:#e8f0fe;color:#1f6feb}.tag.o{background:#fff2e0;color:#b45f06}
+.tag.gr{background:#eef0f4;color:#5b6472}
+.chev{color:#c3c9d2;font-size:18px;flex:none}
+.btn{display:block;width:100%;border:none;border-radius:15px;padding:15px;font-size:15.5px;font-weight:800;font-family:inherit;cursor:pointer}
+.btn:active{transform:scale(.985)}
+.btn.pri{background:#1f6feb;color:#fff}.btn.ok{background:#12a150;color:#fff}
+.btn.dan{background:#fdeaea;color:#cf3438}.btn.gh{background:#eef0f4;color:#39414f}
+.btn.dark{background:#11151c;color:#fff}.btn.big{padding:17px;font-size:16.5px;border-radius:18px}
+.row2{display:flex;gap:9px}
+.banner{background:#fff6e5;border:1px solid #ffe0aa;border-radius:15px;padding:11px 13px;display:flex;gap:10px;align-items:flex-start;margin-top:12px}
+.banner .ic{font-size:17px;line-height:1}
+.banner b{font-size:13px;display:block;margin-bottom:2px}
+.banner p{margin:0;font-size:11.5px;color:#8a6a2a;line-height:1.45}
+.mapwrap{flex:1;position:relative;overflow:hidden}
+#map{position:absolute;inset:0;background:#dfe3e8}
+.navcard{position:absolute;left:12px;right:12px;bottom:12px;background:#fff;border-radius:20px;padding:13px;box-shadow:0 12px 30px rgba(16,24,40,.22);z-index:500}
+.navcard .t{display:flex;align-items:center;gap:11px}
+.arrow{width:44px;height:44px;border-radius:15px;background:#1f6feb;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex:none;transition:transform .4s}
+.navcard .nm{font-size:16px;font-weight:800;line-height:1.15}
+.navcard .ad{font-size:11.5px;color:#8a919e;margin-top:2px}
+.mnv{display:flex;align-items:center;gap:9px;background:#f2f5fa;border-radius:13px;padding:9px 11px;margin:10px 0 0}
+.mnv .mi{width:30px;height:30px;border-radius:10px;background:#11151c;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;flex:none}
+.mnv .mt{flex:1;min-width:0;font-size:12.5px;font-weight:700;line-height:1.3}
+.mnv .mt small{display:block;font-weight:600;color:#8a919e;font-size:10.5px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.navmeta{display:flex;gap:14px;margin:10px 0;font-size:12px;color:#5b6472;font-weight:600}
+.navmeta b{color:#11151c;font-size:14px}
+.mapbtns{position:absolute;right:12px;top:12px;z-index:500;display:flex;flex-direction:column;gap:8px}
+.mbtn{width:38px;height:38px;border-radius:12px;background:#fff;box-shadow:0 3px 10px rgba(16,24,40,.18);display:flex;align-items:center;justify-content:center;font-size:16px;border:none;cursor:pointer}
+.gps{position:absolute;left:12px;top:12px;z-index:500;background:#fff;border-radius:11px;padding:6px 10px;font-size:11px;font-weight:800;box-shadow:0 3px 10px rgba(16,24,40,.15)}
+.gps.on{color:#0d8a44}.gps.off{color:#cf3438}
+.leaflet-container{background:#dfe3e8}
+.pin{background:transparent;border:none}
+.pin div{width:26px;height:26px;border-radius:50%;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.me div{width:18px;height:18px;border-radius:50%;background:#1f6feb;border:3px solid #fff;box-shadow:0 0 0 6px rgba(31,111,235,.22)}
+.tabs{flex:none;background:#fff;border-top:1px solid #e9ebef;display:flex;padding:7px 4px calc(env(safe-area-inset-bottom) + 7px)}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9.5px;font-weight:700;color:#98a0ac;cursor:pointer;padding-top:3px}
+.tab .i{font-size:19px;line-height:1}
+.tab.on{color:#1f6feb}
+.mask{position:fixed;inset:0;background:rgba(10,14,20,.45);opacity:0;pointer-events:none;transition:.25s;z-index:900}
+.mask.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;background:#f5f6f8;border-radius:26px 26px 0 0;transform:translateY(102%);
+ transition:transform .3s cubic-bezier(.32,.72,0,1);z-index:1000;max-height:90%;display:flex;flex-direction:column;visibility:hidden;pointer-events:none}
+.sheet.on{transform:translateY(0);visibility:visible;pointer-events:auto}
+.grab{width:38px;height:4.5px;background:#d3d8e0;border-radius:3px;margin:9px auto 4px;flex:none}
+.sheet .sbody{overflow-y:auto;padding:6px 16px calc(env(safe-area-inset-bottom) + 24px)}
+.sheet .sbody::-webkit-scrollbar{width:0}
+.sh{font-size:19px;font-weight:800;letter-spacing:-.3px}
+.sa{font-size:12px;color:#8a919e;margin-top:2px}
+.f{margin-bottom:11px}
+.f label{display:block;font-size:11.5px;font-weight:700;color:#6d7684;margin:0 0 5px 3px}
+.f input{width:100%;border:1.5px solid #e2e6ec;background:#fff;border-radius:13px;padding:12px 13px;font-size:16px;font-family:inherit;outline:none}
+.f input:focus{border-color:#1f6feb}
+.kgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kc{background:#fff;border:2px solid #e6e9ee;border-radius:15px;padding:11px;cursor:pointer}
+.kc.on{border-color:#12a150;background:#f2fbf6}
+.kc .kn{font-size:13.5px;font-weight:800}
+.kc .kp{font-size:11px;color:#8a919e;margin-top:2px}
+.kc .kl{font-size:10.5px;color:#0d8a44;font-weight:800;margin-top:3px}
+.stepper{display:flex;align-items:center;gap:10px;background:#fff;border-radius:15px;padding:9px 11px;margin-bottom:10px}
+.stepper .sl{flex:1;font-size:12.5px;font-weight:700;color:#6d7684}
+.qb{width:36px;height:36px;border-radius:11px;border:none;background:#eef0f4;font-size:20px;font-weight:700;color:#39414f;cursor:pointer;line-height:1}
+.qv{min-width:76px;text-align:center;font-size:18px;font-weight:800}
+.tot{background:#11151c;color:#fff;border-radius:16px;padding:14px}
+.tot .r{display:flex;justify-content:space-between;font-size:12.5px;opacity:.72;font-weight:600;margin-bottom:6px}
+.tot .m{display:flex;justify-content:space-between;align-items:baseline;padding-top:9px;border-top:1px solid rgba(255,255,255,.15)}
+.tot .m span{font-size:14px;font-weight:700;opacity:.8}
+.tot .m b{font-size:23px;font-weight:800}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cd{background:#fff;border-radius:13px;padding:9px 2px;text-align:center;cursor:pointer;border:1.5px solid transparent}
+.cd .w{font-size:9px;color:#98a0ac;font-weight:700}
+.cd .d{font-size:15px;font-weight:800;margin:3px 0}
+.cd .p{font-size:8.5px;font-weight:700;color:#1f6feb}
+.cd.off{background:#f0f1f4;border-color:#e2e4e9}.cd.off .d,.cd.off .p{color:#b2b8c2}
+.cd.today{border-color:#1f6feb}
+.toast{position:fixed;left:16px;right:16px;bottom:100px;background:#11151c;color:#fff;border-radius:14px;padding:12px 14px;
+ font-size:13px;font-weight:600;z-index:1200;opacity:0;transform:translateY(10px);transition:.28s;pointer-events:none;line-height:1.4}
+.toast.on{opacity:1;transform:translateY(0)}
+.empty{text-align:center;color:#98a0ac;font-size:13px;padding:26px 10px;line-height:1.5}
+.srch{width:100%;border:none;background:#eef0f4;border-radius:13px;padding:11px 13px;font-size:16px;font-family:inherit;outline:none;margin-bottom:12px}
+.swipe-del{background:#fdeaea;color:#cf3438;border:none;border-radius:10px;padding:7px 10px;font-size:11px;font-weight:800;cursor:pointer;flex:none}
+.mini{font-size:11px;color:#8a919e;line-height:1.55;margin-top:9px;padding:0 3px}
+.splash{position:fixed;inset:0;background:#f5f6f8;z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.splash.hide{display:none}
+.spin{width:34px;height:34px;border:3px solid #dfe3e8;border-top-color:#1f6feb;border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.splash p{font-size:13px;color:#8a919e;margin:0}
+.stat{display:flex;gap:8px}
+.stat>div{flex:1;background:#fff;border-radius:14px;padding:11px;text-align:center}
+.stat b{display:block;font-size:19px;font-weight:800}
+.stat span{font-size:10px;color:#8a919e;font-weight:700}
+</style>
+</head>
+<body>
+<div class="splash" id="splash"><div class="spin"></div><p>Дерек жүктелуде…</p></div>
+
+<!-- ===== КҮН ===== -->
+<div class="page on" id="p-day">
+  <div class="hdr"><div class="row"><div><h1>Бүгін</h1><div class="sub" id="dayline">—</div></div>
+    <div class="tag b" id="wstat">Жұмыс күні</div></div></div>
+  <div class="body"><div class="pad">
+    <div class="plan" id="plancard">
+      <div class="top">
+        <div><div class="lbl">ОРЫНДАЛДЫ</div>
+          <div class="big"><span id="pdone">0</span><small> / <span id="pplan">40</span> точка</small></div></div>
+        <div class="ring"><svg width="60" height="60"><circle cx="30" cy="30" r="25" stroke="rgba(255,255,255,.25)" stroke-width="6" fill="none"/><circle id="rg" cx="30" cy="30" r="25" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="157"/></svg><span id="rgt">0%</span></div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="k">ҚҰРТ</div><div class="v"><span id="mkg">0</span> / <span id="pkg">30</span> кг</div><div class="bar"><i id="bkg"></i></div></div>
+        <div class="metric"><div class="k">СОМА</div><div class="v"><span id="mtg">0</span> / <span id="ptg">200</span> мың</div><div class="bar"><i id="btg"></i></div></div>
+      </div>
+    </div>
+
+    <div style="margin-top:13px">
+      <button class="btn ok big" id="daybtn">▶︎ Күнді бастау</button>
+      <div class="mini" id="daymini">Басқан соң ең жақын дүкенге бағыт беріледі.</div>
+    </div>
+
+    <div id="autobanner" style="display:none" class="banner">
+      <div class="ic">⚡️</div><div><b>Қосымша точка қосылды</b><p id="abtxt"></p></div>
+    </div>
+
+    <div class="sect"><span>Маршрут реті</span><span class="act" id="routekm">—</span></div>
+    <div class="card" id="todaylist"></div>
+    <div class="mini">Рет автоматты: тұрған жеріңізден ең жақыны → одан кейінгі ең жақыны.</div>
+  </div></div>
+</div>
+
+<!-- ===== КАРТА ===== -->
+<div class="page" id="p-map">
+  <div class="hdr"><div class="row"><div><h1>Навигация</h1><div class="sub" id="navsub">—</div></div>
+    <div class="tag o" id="leftc">—</div></div></div>
+  <div class="mapwrap">
+    <div id="map"></div>
+    <div class="gps off" id="gpsi">GPS іздеуде…</div>
+    <div class="mapbtns">
+      <button class="mbtn" id="mz1">＋</button><button class="mbtn" id="mz2">－</button><button class="mbtn" id="mc">◎</button>
+    </div>
+    <div class="navcard">
+      <div class="t"><div class="arrow" id="narr">↑</div>
+        <div style="flex:1;min-width:0"><div class="nm" id="nnm">—</div><div class="ad" id="nad">—</div></div>
+        <div style="text-align:right"><div style="font-size:10px;color:#8a919e;font-weight:700">№</div><div style="font-size:19px;font-weight:800" id="nnum">—</div></div></div>
+      <div class="mnv" id="mnv"><div class="mi" id="mvi">↑</div>
+        <div class="mt" id="mvt">—<small id="mvs"></small></div>
+        <div style="font-size:11px;font-weight:800;color:#1f6feb">Бағыттар ›</div></div>
+      <div class="navmeta"><span><b id="ndist">—</b> м</span><span><b id="ntime">—</b> мин</span><span id="nnext" style="margin-left:auto;font-size:11px"></span></div>
+      <div class="row2">
+        <button class="btn gh" style="flex:1" id="bskip">Өткізу</button>
+        <button class="btn pri" style="flex:2" id="barr">Келдім</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ТОЧКА ===== -->
+<div class="page" id="p-pts">
+  <div class="hdr"><div class="row"><div><h1>Точкалар</h1><div class="sub"><span id="ptotal">0</span> дүкен базада</div></div>
+    <button class="mbtn" style="box-shadow:none;background:#1f6feb;color:#fff" id="badd">＋</button></div></div>
+  <div class="body"><div class="pad">
+    <input class="srch" id="q" placeholder="Іздеу: аты не мекенжай">
+    <div class="card" id="ptslist"></div>
+    <div class="mini" id="ptsmore"></div>
+  </div></div>
+</div>
+
+<!-- ===== ЕСЕП ===== -->
+<div class="page" id="p-rep">
+  <div class="hdr"><h1>Есеп</h1><div class="sub">Күнтізбе және қорытынды</div></div>
+  <div class="body"><div class="pad">
+    <div class="cal" id="cal"></div>
+    <div class="mini">Күнді басып «Жұмыс ⇄ Демалыс» ауыстырасыз.</div>
+    <div class="sect">Соңғы 7 күн</div>
+    <div class="stat"><div><b id="s7p">0</b><span>ТОЧКА</span></div><div><b id="s7k">0</b><span>КГ</span></div><div><b id="s7t">0</b><span>МЫҢ ₸</span></div></div>
+    <div class="sect">Күндер тарихы</div>
+    <div class="card" id="hist"></div>
+  </div></div>
+</div>
+
+<!-- ===== БАПТАУ ===== -->
+<div class="page" id="p-set">
+  <div class="hdr"><h1>Баптаулар</h1><div class="sub" id="uname">—</div></div>
+  <div class="body"><div class="pad">
+    <div class="sect">Күндік жоспар</div>
+    <div class="card" style="padding:14px 13px">
+      <div class="f"><label>Точка саны</label><input id="s_pts" type="number" inputmode="numeric"></div>
+      <div class="f"><label>Құрт (кг)</label><input id="s_kg" type="number" inputmode="decimal"></div>
+      <div class="f" style="margin-bottom:0"><label>Сома (₸)</label><input id="s_tg" type="number" inputmode="numeric"></div>
+    </div>
+    <div class="mini">Үш шарттың кез келгені орындалса — күн жабылды.</div>
+
+    <div class="sect"><span>Құрт каталогы</span><span class="act" id="bcat">+ Түр қосу</span></div>
+    <div class="card" id="catlist"></div>
+
+    <div class="sect">Дерек</div>
+    <div class="card">
+      <div class="item" id="bsync"><div class="dot" style="background:#1f6feb">☁︎</div>
+        <div class="it"><div class="n">Сақтау күйі</div><div class="a" id="syncst">—</div></div><span class="chev">›</span></div>
+      <div class="item" id="breset"><div class="dot" style="background:#e5484d">⟲</div>
+        <div class="it"><div class="n">Бүгінгі күнді тазалау</div><div class="a">Барлық белгіні өшіру</div></div><span class="chev">›</span></div>
+    </div>
+    <div class="mini" id="verline"></div>
+  </div></div>
+</div>
+
+<div class="tabs">
+  <div class="tab on" data-p="day"><div class="i">🎯</div>Күн</div>
+  <div class="tab" data-p="map"><div class="i">🧭</div>Карта</div>
+  <div class="tab" data-p="pts"><div class="i">📍</div>Точка</div>
+  <div class="tab" data-p="rep"><div class="i">📊</div>Есеп</div>
+  <div class="tab" data-p="set"><div class="i">⚙️</div>Баптау</div>
+</div>
+
+<div class="mask" id="mask"></div>
+<div class="sheet" id="sheet"><div class="grab"></div><div class="sbody" id="sbody"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="points.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
