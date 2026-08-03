@@ -3,7 +3,7 @@
    Карта: OpenStreetMap + OSRM (тегін)
 ================================================================= */
 const TG = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-const VER = "1.3";
+const VER = "1.4";
 const $ = id => document.getElementById(id);
 const fmt = n => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 
@@ -436,11 +436,13 @@ function openPoint(k) {
        <div style="font-size:11.5px;color:#8a919e;margin-top:2px">${t.route.indexOf(k) >= 0 ? "Маршрутта" : "Базада"}</div></div></div>
      <div style="height:12px"></div>
      <button class="btn pri" id="pjump">Осыған бару</button>
+     <div style="height:9px"></div><button class="btn gh" id="pext">🗺 Басқа навигаторда ашу</button>
      ${t.route.indexOf(k) < 0 ? `<div style="height:9px"></div><button class="btn gh" id="padd2">Маршрутқа қосу</button>` : ""}
      <div style="height:9px"></div><button class="btn dan" id="pdel">Точканы өшіру</button>
      <div style="height:9px"></div><button class="btn gh" onclick="closeSheet()">Жабу</button>`;
     showSheet();
     $("pjump").onclick = () => jumpTo(k);
+    $("pext").onclick = () => openExternal(p);
     if ($("padd2")) $("padd2").onclick = () => { T().route.push(k); saveSoon(); closeSheet(); renderDay(); MAP.refresh(); toast("Маршрутқа қосылды"); };
     $("pdel").onclick = () => delPt(k);
   } else {
@@ -661,10 +663,31 @@ async function drawRoad() {
   }
   paintNav();
 }
+// жолдан қанша метр алыстадық
+function offRouteM() {
+  if (!roadInfo || !roadInfo.geo || !roadInfo.geo.length) return 0;
+  let m = Infinity;
+  const g = roadInfo.geo, step = Math.max(1, Math.floor(g.length / 260));
+  for (let i = 0; i < g.length; i += step) {
+    const d = dist(ME, { lat: g[i][0], lon: g[i][1] });
+    if (d < m) m = d;
+    if (m < 25) break;
+  }
+  return m;
+}
+let reroutedAt = 0;
 function navRefresh() {
   if (!FOLLOW) return;
   const n = nextPt();
   if (!n) { MAP.follow(false); return; }
+  // бұрылысты өткізіп жіберсеңіз — жол автоматты қайта есептеледі
+  const off = offRouteM();
+  const now = Date.now();
+  if (off > 45 && now - reroutedAt > 6000) {
+    reroutedAt = now; roadKey = "";           // кэшті тазалау → жаңа жол сұралады
+    $("nvRer").classList.add("on"); haptic("light");
+    drawRoad().then(() => setTimeout(() => $("nvRer").classList.remove("on"), 900));
+  } else if (off <= 45) $("nvRer").classList.remove("on");
   $("nvDest").textContent = n.n; $("nvDestA").textContent = n.a;
   $("nvSpd").textContent = Math.round(spd);
   if (roadInfo && roadInfo.leg) {
@@ -807,6 +830,32 @@ $("mz2").onclick = () => MAP.ok && MAP.map.setZoom(MAP.map.getZoom() - 1);
 $("mc").onclick = () => MAP.center();
 $("mfollow").onclick = () => MAP.follow();
 $("nvExit").onclick = () => MAP.follow(false);
+function openExternal(p) {
+  if (!p) return;
+  const la = p.lat, lo = p.lon;
+  const links = [
+    { n: "2GIS", i: "🟢", u: `https://2gis.kz/directions/points/%7C${lo}%2C${la}` },
+    { n: "Яндекс Навигатор", i: "🟡", u: `https://yandex.kz/maps/?rtext=~${la}%2C${lo}&rtt=auto` },
+    { n: "Apple Карта", i: "🍎", u: `https://maps.apple.com/?daddr=${la},${lo}&dirflg=d` },
+    { n: "Google Карта", i: "🔵", u: `https://www.google.com/maps/dir/?api=1&destination=${la},${lo}&travelmode=driving` }
+  ];
+  $("sbody").innerHTML = `<div class="sh">${esc(p.n)}</div><div class="sa">${esc(p.a)}</div>
+    <div style="height:14px"></div>
+    <div class="card">${links.map((l, i) => `<div class="item" data-u="${i}">
+      <div class="dot" style="background:#eef0f4;font-size:17px">${l.i}</div>
+      <div class="it"><div class="n">${l.n}</div><div class="a">осы дүкенге бағыт салады</div></div>
+      <span class="chev">›</span></div>`).join("")}</div>
+    <div class="mini">Қосымша жабылмайды — навигатор бөлек ашылады, қайтып келе бересіз.</div>
+    <div style="height:14px"></div><button class="btn gh" onclick="closeSheet()">Жабу</button>`;
+  showSheet();
+  $("sbody").querySelectorAll(".item").forEach(el => el.onclick = () => {
+    const u = links[+el.dataset.u].u;
+    haptic("medium"); closeSheet();
+    try { if (TG && TG.openLink) TG.openLink(u); else window.open(u, "_blank"); }
+    catch (e) { window.open(u, "_blank"); }
+  });
+}
+$("nvOpen").onclick = () => openExternal(nextPt());
 $("nvArrive").onclick = () => { MAP.follow(false); $("barr").click(); };
 $("mloc").onclick = locateMe;
 
