@@ -15,7 +15,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Robot
  background:#f5f6f8;color:#11151c;display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
 .hdr{flex:none;background:#fff;padding:calc(env(safe-area-inset-top) + 8px) 16px 11px;border-bottom:1px solid #e9ebef}
 .hdr h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-.4px}
-.hdr .sub{font-size:12px;color:#8a919e;margin-top:2px}
+.hdr .sub{font-size:12px;color:#6b7280;margin-top:2px}
 .hdr .row{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .body::-webkit-scrollbar{width:0}
@@ -37,22 +37,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Robot
 .metric .v{font-size:15px;font-weight:800;margin-top:1px}
 .bar{height:4px;border-radius:3px;background:rgba(255,255,255,.25);margin-top:6px;overflow:hidden}
 .bar i{display:block;height:100%;background:#fff;border-radius:3px;transition:width .5s}
-.sect{font-size:11.5px;font-weight:800;color:#8a919e;text-transform:uppercase;letter-spacing:.5px;margin:20px 2px 9px;display:flex;justify-content:space-between;align-items:center}
+.sect{font-size:11.5px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin:20px 2px 9px;display:flex;justify-content:space-between;align-items:center}
 .sect span.act{color:#1f6feb;text-transform:none;font-size:12px;font-weight:700}
 .card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(16,24,40,.05)}
 .item{display:flex;align-items:center;gap:11px;padding:12px 13px;border-bottom:1px solid #f0f2f5}
 .item:last-child{border-bottom:none}
-.dot{width:34px;height:34px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;background:#aab2bf}
+.dot{width:34px;height:34px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;background:#78808d}
 .dot.sold{background:#12a150}.dot.no{background:#e5484d}.dot.cls{background:#6b7280}
 .dot.next{background:#1f6feb;box-shadow:0 0 0 4px rgba(31,111,235,.18)}
 .it{flex:1;min-width:0}
 .it .n{font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.it .a{font-size:11.5px;color:#8a919e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.it .a{font-size:11.5px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
 .tag{font-size:10px;font-weight:800;padding:3px 7px;border-radius:7px;flex:none}
-.tag.g{background:#e7f7ee;color:#0d8a44}.tag.r{background:#fdeaea;color:#cf3438}
-.tag.b{background:#e8f0fe;color:#1f6feb}.tag.o{background:#fff2e0;color:#b45f06}
+.tag.g{background:#e7f7ee;color:#0a6e36}.tag.r{background:#fdeaea;color:#b3282c}
+.tag.b{background:#e8f0fe;color:#155ac2}.tag.o{background:#fff2e0;color:#8a4805}
 .tag.gr{background:#eef0f4;color:#5b6472}
-.chev{color:#c3c9d2;font-size:18px;flex:none}
+.chev{color:#9aa2ad;font-size:18px;flex:none}
 .btn{display:block;width:100%;border:none;border-radius:15px;padding:15px;font-size:15.5px;font-weight:800;font-family:inherit;cursor:pointer}
 .btn:active{transform:scale(.985)}
 .btn.pri{background:#1f6feb;color:#fff}.btn.ok{background:#12a150;color:#fff}
@@ -76,6 +76,8 @@ body.nav .hdr,body.nav .tabs{display:none}
 body.nav .navcard{display:none}
 body.nav .locbtn{display:none}
 body.nav .mapbtns{top:auto;bottom:calc(env(safe-area-inset-bottom) + 205px)}
+/* навигацияда GPS белгісі жоғарғы карточканың астында қалмасын */
+body.nav .gps{top:auto;bottom:calc(env(safe-area-inset-bottom) + 272px);left:12px;right:auto}
 .navtop{position:absolute;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 10px);z-index:600;display:none}
 body.nav .navtop{display:block}
 .navtop .card2{background:#1f6feb;color:#fff;border-radius:20px;padding:14px 16px;
@@ -92,10 +94,10 @@ body.nav .navbot{display:block}
 .navbot .kpi{display:flex;align-items:center;gap:10px}
 .navbot .kpi .v{flex:1;text-align:center}
 .navbot .kpi b{display:block;font-size:19px;font-weight:800;letter-spacing:-.5px}
-.navbot .kpi span{font-size:9.5px;color:#8a919e;font-weight:700}
+.navbot .kpi span{font-size:9.5px;color:#6b7280;font-weight:700}
 .navbot .x{width:40px;height:40px;border-radius:14px;background:#eef0f4;border:none;font-size:17px;flex:none;cursor:pointer}
 .navbot .dst{font-size:13px;font-weight:800;text-align:center;margin-bottom:2px}
-.navbot .dsa{font-size:11px;color:#8a919e;text-align:center;margin-bottom:9px}
+.navbot .dsa{font-size:11px;color:#6b7280;text-align:center;margin-bottom:9px}
 .navbot .go{margin-top:10px}
 .spdo{position:absolute;left:14px;bottom:calc(env(safe-area-inset-bottom) + 205px);z-index:600;width:56px;height:56px;
  border-radius:50%;background:#fff;border:4px solid #e5484d;display:none;flex-direction:column;align-items:center;justify-content:center;
@@ -105,7 +107,7 @@ body.nav .spdo{display:flex}
  font-weight:800;display:none;box-shadow:0 6px 18px rgba(16,24,40,.25);text-align:center}
 .rerou.on{display:block}
 .spdo b{font-size:18px;font-weight:800;line-height:1}
-.spdo span{font-size:7.5px;color:#8a919e;font-weight:800}
+.spdo span{font-size:7.5px;color:#6b7280;font-weight:800}
 .me div{transition:none}
 .mearrow div{width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;
  border-bottom:24px solid #1f6feb;filter:drop-shadow(0 2px 5px rgba(0,0,0,.4))}
@@ -113,15 +115,15 @@ body.nav .spdo{display:flex}
 .navcard .t{display:flex;align-items:center;gap:11px}
 .arrow{width:44px;height:44px;border-radius:15px;background:#1f6feb;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex:none;transition:transform .4s}
 .navcard .nm{font-size:16px;font-weight:800;line-height:1.15}
-.navcard .ad{font-size:11.5px;color:#8a919e;margin-top:2px}
+.navcard .ad{font-size:11.5px;color:#6b7280;margin-top:2px}
 .mnv{display:flex;align-items:center;gap:9px;background:#f2f5fa;border-radius:13px;padding:9px 11px;margin:10px 0 0}
 .mnv .mi{width:30px;height:30px;border-radius:10px;background:#11151c;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;flex:none}
 .mnv .mt{flex:1;min-width:0;font-size:12.5px;font-weight:700;line-height:1.3}
-.mnv .mt small{display:block;font-weight:600;color:#8a919e;font-size:10.5px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mnv .mt small{display:block;font-weight:600;color:#6b7280;font-size:10.5px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .navmeta{display:flex;gap:14px;margin:10px 0;font-size:12px;color:#5b6472;font-weight:600}
 .navmeta b{color:#11151c;font-size:14px}
 .mapbtns{position:absolute;right:12px;top:12px;z-index:500;display:flex;flex-direction:column;gap:8px}
-.mbtn{width:38px;height:38px;border-radius:12px;background:#fff;box-shadow:0 3px 10px rgba(16,24,40,.18);display:flex;align-items:center;justify-content:center;font-size:16px;border:none;cursor:pointer}
+.mbtn{width:44px;height:44px;border-radius:12px;background:#fff;box-shadow:0 3px 10px rgba(16,24,40,.18);display:flex;align-items:center;justify-content:center;font-size:16px;border:none;cursor:pointer}
 .gps{position:absolute;left:12px;top:12px;z-index:500;background:#fff;border-radius:11px;padding:6px 10px;font-size:11px;font-weight:800;box-shadow:0 3px 10px rgba(16,24,40,.15)}
 .gps.on{color:#0d8a44}.gps.off{color:#cf3438}
 .leaflet-container{background:#dfe3e8}
@@ -135,7 +137,7 @@ body.nav .spdo{display:flex}
 @keyframes tabflow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 @keyframes tabglow{0%,100%{transform:scale(.84);opacity:.55}50%{transform:scale(1.16);opacity:1}}
 .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;font-weight:600;
- color:#9aa1ad;cursor:pointer;padding-top:2px;letter-spacing:-.1px;transition:color .18s;
+ color:#6b7280;cursor:pointer;padding-top:2px;letter-spacing:-.1px;transition:color .18s;
  position:relative;z-index:2}
 .tab.on .i::before{content:"";position:absolute;inset:-11px;border-radius:50%;z-index:-1;
  background:radial-gradient(circle,rgba(124,58,237,.28),transparent 68%);
@@ -156,7 +158,7 @@ body.nav .spdo{display:flex}
 .sheet .sbody{overflow-y:auto;padding:6px 16px calc(env(safe-area-inset-bottom) + 24px)}
 .sheet .sbody::-webkit-scrollbar{width:0}
 .sh{font-size:19px;font-weight:800;letter-spacing:-.3px}
-.sa{font-size:12px;color:#8a919e;margin-top:2px}
+.sa{font-size:12px;color:#6b7280;margin-top:2px}
 .f{margin-bottom:11px}
 .f label{display:block;font-size:11.5px;font-weight:700;color:#6d7684;margin:0 0 5px 3px}
 .f input{width:100%;border:1.5px solid #e2e6ec;background:#fff;border-radius:13px;padding:12px 13px;font-size:16px;font-family:inherit;outline:none}
@@ -165,11 +167,11 @@ body.nav .spdo{display:flex}
 .kc{background:#fff;border:2px solid #e6e9ee;border-radius:15px;padding:11px;cursor:pointer}
 .kc.on{border-color:#12a150;background:#f2fbf6}
 .kc .kn{font-size:13.5px;font-weight:800}
-.kc .kp{font-size:11px;color:#8a919e;margin-top:2px}
+.kc .kp{font-size:11px;color:#6b7280;margin-top:2px}
 .kc .kl{font-size:10.5px;color:#0d8a44;font-weight:800;margin-top:3px}
 .stepper{display:flex;align-items:center;gap:10px;background:#fff;border-radius:15px;padding:9px 11px;margin-bottom:10px}
 .stepper .sl{flex:1;font-size:12.5px;font-weight:700;color:#6d7684}
-.qb{width:36px;height:36px;border-radius:11px;border:none;background:#eef0f4;font-size:20px;font-weight:700;color:#39414f;cursor:pointer;line-height:1}
+.qb{width:44px;height:44px;border-radius:11px;border:none;background:#eef0f4;font-size:20px;font-weight:700;color:#39414f;cursor:pointer;line-height:1}
 .qv{min-width:76px;text-align:center;font-size:18px;font-weight:800}
 .tot{background:#11151c;color:#fff;border-radius:16px;padding:14px}
 .tot .r{display:flex;justify-content:space-between;font-size:12.5px;opacity:.72;font-weight:600;margin-bottom:6px}
@@ -178,7 +180,7 @@ body.nav .spdo{display:flex}
 .tot .m b{font-size:23px;font-weight:800}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .cd{background:#fff;border-radius:13px;padding:9px 2px;text-align:center;cursor:pointer;border:1.5px solid transparent}
-.cd .w{font-size:9px;color:#98a0ac;font-weight:700}
+.cd .w{font-size:9px;color:#6b7280;font-weight:700}
 .cd .d{font-size:15px;font-weight:800;margin:3px 0}
 .cd .p{font-size:8.5px;font-weight:700;color:#1f6feb}
 .cd.off{background:#f0f1f4;border-color:#e2e4e9}.cd.off .d,.cd.off .p{color:#b2b8c2}
@@ -187,19 +189,19 @@ body.nav .spdo{display:flex}
  font-size:13px;font-weight:600;z-index:1200;opacity:0;transform:translateY(10px);transition:.28s;pointer-events:none;line-height:1.4}
 .toast.on{opacity:1;transform:translateY(0)}
 body.nav .toast{bottom:calc(env(safe-area-inset-bottom) + 215px)}
-.empty{text-align:center;color:#98a0ac;font-size:13px;padding:26px 10px;line-height:1.5}
+.empty{text-align:center;color:#6b7280;font-size:13px;padding:26px 10px;line-height:1.5}
 .srch{width:100%;border:none;background:#eef0f4;border-radius:13px;padding:11px 13px;font-size:16px;font-family:inherit;outline:none;margin-bottom:12px}
-.swipe-del{background:#fdeaea;color:#cf3438;border:none;border-radius:10px;padding:7px 10px;font-size:11px;font-weight:800;cursor:pointer;flex:none}
-.mini{font-size:11px;color:#8a919e;line-height:1.55;margin-top:9px;padding:0 3px}
+.swipe-del{background:#fdeaea;color:#b3282c;border:none;border-radius:10px;padding:12px 12px;min-height:44px;font-size:11px;font-weight:800;cursor:pointer;flex:none}
+.mini{font-size:11px;color:#6b7280;line-height:1.55;margin-top:9px;padding:0 3px}
 .splash{position:fixed;inset:0;background:#f5f6f8;z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
 .splash.hide{display:none}
 .spin{width:34px;height:34px;border:3px solid #dfe3e8;border-top-color:#1f6feb;border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
-.splash p{font-size:13px;color:#8a919e;margin:0}
+.splash p{font-size:13px;color:#6b7280;margin:0}
 .stat{display:flex;gap:8px}
 .stat>div{flex:1;background:#fff;border-radius:14px;padding:11px;text-align:center}
 .stat b{display:block;font-size:19px;font-weight:800}
-.stat span{font-size:10px;color:#8a919e;font-weight:700}
+.stat span{font-size:10px;color:#6b7280;font-weight:700}
 </style>
 </head>
 <body>
@@ -234,9 +236,9 @@ body.nav .toast{bottom:calc(env(safe-area-inset-bottom) + 215px)}
     <div class="sect"><span>Бүгінгі аймақ</span><span class="act" id="bremake">Қайта құру</span></div>
     <div class="card" style="padding:12px 13px">
       <div style="font-size:13.5px;font-weight:800" id="zonename">—</div>
-      <div style="font-size:11.5px;color:#8a919e;margin-top:3px" id="zoneinfo">—</div>
+      <div style="font-size:11.5px;color:#6b7280;margin-top:3px" id="zoneinfo">—</div>
       <div class="bar" style="background:#eef0f4;margin-top:9px"><i id="zcov" style="background:#1f6feb"></i></div>
-      <div style="font-size:10.5px;color:#8a919e;margin-top:5px" id="covtxt">—</div>
+      <div style="font-size:10.5px;color:#6b7280;margin-top:5px" id="covtxt">—</div>
     </div>
     <div class="sect"><span>Маршрут реті</span><span class="act" id="routekm">—</span></div>
     <div class="card" id="todaylist"></div>
@@ -284,7 +286,7 @@ body.nav .toast{bottom:calc(env(safe-area-inset-bottom) + 215px)}
     <div class="navcard">
       <div class="t"><div class="arrow" id="narr">↑</div>
         <div style="flex:1;min-width:0"><div class="nm" id="nnm">—</div><div class="ad" id="nad">—</div></div>
-        <div style="text-align:right"><div style="font-size:10px;color:#8a919e;font-weight:700">№</div><div style="font-size:19px;font-weight:800" id="nnum">—</div></div></div>
+        <div style="text-align:right"><div style="font-size:10px;color:#6b7280;font-weight:700">№</div><div style="font-size:19px;font-weight:800" id="nnum">—</div></div></div>
       <div class="mnv" id="mnv"><div class="mi" id="mvi">↑</div>
         <div class="mt" id="mvt">—<small id="mvs"></small></div>
         <div style="font-size:11px;font-weight:800;color:#1f6feb">Бағыттар ›</div></div>
@@ -321,7 +323,7 @@ body.nav .toast{bottom:calc(env(safe-area-inset-bottom) + 215px)}
       <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700">
         <span>Кірілген дүкен</span><span id="covn">—</span></div>
       <div class="bar" style="background:#eef0f4;margin-top:8px"><i id="covbar" style="background:#12a150"></i></div>
-      <div style="font-size:11px;color:#8a919e;margin-top:6px" id="covdet">—</div>
+      <div style="font-size:11px;color:#6b7280;margin-top:6px" id="covdet">—</div>
     </div>
     <div class="sect">Күндер тарихы</div>
     <div class="card" id="hist"></div>
@@ -339,19 +341,29 @@ body.nav .toast{bottom:calc(env(safe-area-inset-bottom) + 215px)}
       <div class="f"><label>Күндік пайда (₸)</label><input id="s_tg" type="number" inputmode="numeric"></div>
       <div class="f" style="margin-bottom:0"><label>Әр дүкенге қанша күнде бір рет кіру</label><input id="s_cyc" type="number" inputmode="numeric"></div>
     </div>
-    <div class="mini">Үш шарттың кез келгені орындалса — күн жабылды.</div>
+    <div class="mini">Үш шарттың кез келгені орындалса — күн жабылды.<br><span id="cycinfo"></span></div>
 
     <div class="sect"><span>Құрт каталогы</span><span class="act" id="bcat">+ Түр қосу</span></div>
     <div class="card" id="catlist"></div>
 
     <div class="sect">Дерек</div>
+    <div id="dangerbox"></div>
     <div class="card">
       <div class="item" id="bsync"><div class="dot" style="background:#1f6feb">☁︎</div>
         <div class="it"><div class="n">Сақтау күйі</div><div class="a" id="syncst">—</div></div><span class="chev">›</span></div>
+      <div class="item" id="bexp"><div class="dot" style="background:#12a150">⤓</div>
+        <div class="it"><div class="n">Сақтық көшірме</div><div class="a" id="expinfo">Файлға жүктеу / қайта қалпына келтіру</div></div><span class="chev">›</span></div>
+      <div class="item" id="btrash"><div class="dot" style="background:#6b7280">🗑</div>
+        <div class="it"><div class="n">Өшірілген дүкендер</div><div class="a" id="trashinfo">—</div></div><span class="chev">›</span></div>
+      <div class="item" id="bdiag"><div class="dot" style="background:#39414f">🩺</div>
+        <div class="it"><div class="n">Диагностика</div><div class="a">Қателер журналы, көлем, маршрут сервері</div></div>
+        <span class="tag r" id="errbadge" style="display:none">0</span><span class="chev">›</span></div>
       <div class="item" id="breset"><div class="dot" style="background:#e5484d">⟲</div>
         <div class="it"><div class="n">Тазалау</div><div class="a">Бүгінгі күн немесе сынақ деректері</div></div><span class="chev">›</span></div>
     </div>
     <div class="mini" id="verline"></div>
+    <div class="mini">Карта: © OpenStreetMap салымшылары (ODbL) · © CARTO · маршрут: OSRM.<br>
+      Дүкен базасы жеке пайдалануға арналған.</div>
   </div></div>
 </div>
 
@@ -369,7 +381,7 @@ body.nav .toast{bottom:calc(env(safe-area-inset-bottom) + 215px)}
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="points.js?v=16"></script>
-<script src="app.js?v=16"></script>
+<script src="points.js?v=17"></script>
+<script src="app.js?v=17"></script>
 </body>
 </html>
